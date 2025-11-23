@@ -1,0 +1,75 @@
+|-- .dockerignore
+|-- .gitignore
+|-- client
+    |-- .dockerignore
+    |-- .env
+    |-- .gitignore
+    |-- Containerfile
+    |-- eslint.config.js
+    |-- index.html
+    |-- package.json
+    |-- pnpm-lock.yaml
+    |-- pnpm-workspace.yaml
+    |-- public
+        |-- Logo.svg
+    |-- README.md
+    |-- src
+        |-- App.css
+        |-- App.tsx
+        |-- assets
+            |-- react.svg
+        |-- components
+            |-- AuthContext.tsx
+            |-- BookForm.tsx
+            |-- BookList.tsx
+            |-- BulkImportDialog.tsx
+            |-- CategoryManagement.tsx
+            |-- Dashboard.tsx
+            |-- LoanHistory.tsx
+            |-- LoanManager.tsx
+            |-- Login.tsx
+            |-- MemberForm.tsx
+            |-- MemberList.tsx
+            |-- Navbar.tsx
+            |-- Notification.tsx
+            |-- Setup.tsx
+            |-- UserManagement.tsx
+        |-- index.css
+        |-- main.tsx
+        |-- theme.ts
+    |-- tsconfig.app.json
+    |-- tsconfig.json
+    |-- tsconfig.node.json
+    |-- vite.config.ts
+|-- compose.prod.yml
+|-- compose.yml
+|-- docs
+    |-- app_plan.md
+    |-- app_status.md
+    |-- improvement_plan.md
+|-- GEMINI.md
+|-- server
+    |-- .dockerignore
+    |-- .env
+    |-- .gitignore
+    |-- authUtils.js
+    |-- backup.sh
+    |-- Containerfile
+    |-- db.js
+    |-- index.js
+    |-- migrations
+        |-- 20251120093500_create_books_table.js
+        |-- 20251120093501_create_members_table.js
+        |-- 20251120093502_create_loans_table.js
+        |-- 20251120093803_create_users_table.js
+        |-- 20251120100000_add_cover_image_path_to_books.js
+        |-- 20251120100500_create_categories_and_book_categories_table.js
+    |-- package.json
+    |-- pnpm-lock.yaml
+    |-- start.sh
+    |-- uploads
+|-- traefik
+    |-- acme.json
+    |-- certs
+        |-- cert.pem
+        |-- key.pem

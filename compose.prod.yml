@@ -1,0 +1,75 @@
+services:
+  traefik:
+    image: traefik:@latest
+    container_name: traefik
+    command:
+      - --api.dashboard=true
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+
+      # EntryPoints
+      - --entrypoints.web.address=:80
+      - --entrypoints.web.http.redirections.entrypoint.to=websecure
+      - --entrypoints.web.http.redirections.entrypoint.scheme=https
+
+      - --entrypoints.websecure.address=:443
+
+      # Enable HTTPS using Let's Encrypt
+      - --certificatesresolvers.mytlschallenge.acme.tlschallenge=true
+      - --certificatesresolvers.mytlschallenge.acme.email=admin@myapp.example.com
+      - --certificatesresolvers.mytlschallenge.acme.storage=/etc/traefik/acme.json
+      # OPTIONAL: use staging (uncomment for testing only)
+      # - --certificatesresolvers.mytlschallenge.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory
+
+      - --log.level=INFO
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"  # Dashboard
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik/acme.json:/etc/traefik/acme.json
+    restart: unless-stopped
+
+  server:
+    image: myapp/server:latest
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgres://user:password@postgres:5432/library
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.server.rule=Host(`myapp.example.com`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.server.entrypoints=websecure"
+      - "traefik.http.routers.server.tls.certresolver=mytlschallenge"
+      - "traefik.http.services.server.loadbalancer.server.port=3001"
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
+  client:
+    image: myapp/client:latest
+    environment:
+      VITE_API_URL=https://myapp.example.com/api
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.client.rule=Host(`myapp.example.com`)"
+      - "traefik.http.routers.client.entrypoints=websecure"
+      - "traefik.http.routers.client.tls.certresolver=mytlschallenge"
+      - "traefik.http.services.client.loadbalancer.server.port=3000"
+    depends_on:
+      - server
+      - traefik
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: library
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

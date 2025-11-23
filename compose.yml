@@ -1,0 +1,94 @@
+services:
+  postgres:
+    image: postgres:16
+    restart: always
+    environment:
+      POSTGRES_DB: library
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  server:
+    build:
+      context: ./server
+      dockerfile: Containerfile
+    command: ["sh", "start.sh"]
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgres://user:password@postgres:5432/library
+      # This is a default, insecure key for development.
+      # In a production environment, this should be replaced with a strong, securely managed secret.
+      JWT_SECRET: "1ab773f62875b39683177b36ce4bbb18fed5bd539618c53b732c07e2eb941f29"
+    volumes:
+      - ./server:/app
+      - /app/node_modules
+      - uploads_data:/app/uploads
+    depends_on:
+      - postgres
+    restart: always
+    labels:
+      - "traefik.enable=true" 
+      - "traefik.http.routers.server.rule=Host(`local.test`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.server.entrypoints=websecure"
+      - "traefik.http.routers.server.tls=true"
+      - "traefik.http.services.server.loadbalancer.server.port=3001"
+
+  client:
+    build:
+      context: ./client
+      dockerfile: Containerfile
+    environment:
+      VITE_API_URL: https://local.test/api
+    depends_on:
+      - server
+      - traefik
+    restart: always
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.client.rule=Host(`local.test`) && PathPrefix(`/`)"
+      - "traefik.http.routers.client.entrypoints=websecure"
+      - "traefik.http.routers.client.tls=true"
+      - "traefik.http.services.client.loadbalancer.server.port=3000"
+
+  traefik:
+    image: traefik:v3.6    # Use fixed version, avoid 'latest'
+    container_name: traefik
+    command:
+      - --api.dashboard=true
+      - --providers.docker=true
+      - --providers.docker.endpoint=unix:///run/podman/podman.sock
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      - --entrypoints.traefik.address=:8080
+      - --log.level=DEBUG
+    ports:
+      - "8080:8080"
+      - "443:443"
+    volumes:
+      - /run/podman/podman.sock:/run/podman/podman.sock:ro
+      - ./traefik/certs:/certs:ro
+    labels:
+      - "traefik.tls.stores.default.defaultCertificate.certFile=/certs/cert.pem"
+      - "traefik.tls.stores.default.defaultCertificate.keyFile=/certs/key.pem"
+    restart: always
+
+  backup:
+    image: postgres:16
+    container_name: db_backup_job
+    volumes:
+      - ./server/backup.sh:/usr/local/bin/backup.sh
+      - db_backups:/backups
+    environment:
+      PGPASSWORD: password
+    depends_on:
+      - postgres
+    command: ["/usr/local/bin/backup.sh"]
+
+volumes:
+  postgres_data:
+  uploads_data:
+  db_backups:
