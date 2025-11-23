@@ -6,6 +6,7 @@ const authUtils = require('./authUtils'); // Import auth utilities
 const { schedule } = require('node-cron'); // Import node-cron
 const axios = require('axios'); // For making HTTP requests
 const fs = require('fs'); // For file system operations
+const { v4: uuidv4 } = require('uuid');
 
 const app = express();
 const port = 3001;
@@ -722,73 +723,101 @@ const multer = require('multer');
 const { parse } = require('csv-parse/sync');
 
 // Configure multer for file storage in memory
-const upload = multer({ storage: multer.memoryStorage() });
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 2 * 1024 * 1024 }, // Prevent huge CSV uploads
+  fileFilter: (req, file, cb) => {
+    if (['text/csv', 'application/vnd.ms-excel'].includes(file.mimetype)) cb(null, true);
+    else cb(new Error('INVALID_CSV_TYPE'));
+  }
+});
 
-// API endpoint for bulk book import
 app.post('/api/books/bulk-import', authUtils.authenticateToken, upload.single('file'), async (req, res) => {
-  if (!req.file || req.file.mimetype !== 'text/csv') {
-    return res.status(400).json({ error: 'Please upload a CSV file.' });
+  if (!req.file) {
+    return res.status(400).json({ error: 'CSV file is required.' });
   }
 
-  const csvBuffer = req.file.buffer;
-  const records = parse(csvBuffer, {
-    columns: true, // Treat the first row as column headers
-    skip_empty_lines: true,
-    trim: true,
-  });
+  let records;
+  try {
+    records = parse(req.file.buffer, {
+      columns: true,
+      skip_empty_lines: true,
+      trim: true,
+    });
+  } catch {
+    return res.status(400).json({ error: 'Invalid CSV file format.' });
+  }
 
   const importedBooks = [];
   const errors = [];
-  
-  const client = await db.pool.connect(); // Get a client from the pool for transaction
+  const client = await db.pool.connect();
 
   try {
-    await client.query('BEGIN'); // Start transaction
+    await client.query('BEGIN');
 
-    for (const record of records) {
-      const { title, author, isbn } = record; // Extract only expected columns
+    for (const [index, record] of records.entries()) {
+      const { title, author, isbn, cover_image_path } = record;
 
       if (!title || !author) {
-        errors.push(`Row missing required fields (title, author): ${JSON.stringify(record)}`);
+        errors.push(`Row ${index + 1}: Missing required field (title/author)`);
         continue;
       }
 
+      let finalCoverPath = cover_image_path || null;
+
+      // If cover image is a URL → download
+      if (cover_image_path && /^https?:\/\/.+/i.test(cover_image_path)) {
+        try {
+          const imageResponse = await axios.get(cover_image_path, { responseType: 'arraybuffer' });
+
+          // Create uploads directory if not exists
+          if (!fs.existsSync(path.join(__dirname, 'uploads'))) {
+            fs.mkdirSync(path.join(__dirname, 'uploads'), { recursive: true });
+          }
+
+          const fileExt = path.extname(new URL(cover_image_path).pathname) || '.jpg';
+          finalCoverPath = `/uploads/${uuidv4()}${fileExt}`;
+          const savePath = path.join(__dirname, finalCoverPath);
+
+          fs.writeFileSync(savePath, imageResponse.data);
+        } catch {
+          errors.push(`Row ${index + 1}: Failed to download cover image from URL`);
+        }
+      }
+
+      // Try inserting record
       try {
-        const { rows } = await client.query(
-          'INSERT INTO books (title, author, isbn) VALUES ($1, $2, $3) ON CONFLICT (isbn) DO NOTHING RETURNING id',
-          [title, author, isbn || null]
+        const result = await client.query(
+          `INSERT INTO books (title, author, isbn, cover_image_path)
+          VALUES ($1, $2, $3, $4)
+          ON CONFLICT (isbn) DO NOTHING
+          RETURNING id`,
+          [title.trim(), author.trim(), isbn || null, finalCoverPath]
         );
-        if (rows.length > 0) {
-          importedBooks.push(rows[0]);
+
+        if (result.rows.length) {
+          importedBooks.push(result.rows[0]);
+        } else {
+          errors.push(`Row ${index + 1}: Duplicate ISBN (${isbn})`);
         }
       } catch (err) {
-        errors.push(`Error inserting row ${JSON.stringify(record)}: ${err.message}`);
-        console.error('Bulk import insert error:', err);
+        errors.push(`Row ${index + 1} insert failed: ${err.message}`);
       }
     }
 
-    await client.query('COMMIT'); // Commit transaction
-    
-    if (errors.length > 0) {
-      return res.status(207).json({
-        message: `${importedBooks.length} books imported successfully, with ${errors.length} errors.`,
-        importedBooks: importedBooks,
-        errors: errors,
-      });
-    }
-
-    res.status(200).json({
-      message: `${importedBooks.length} books imported successfully.`,
-      importedBooks: importedBooks,
-    });
-
+    await client.query('COMMIT');
   } catch (err) {
-    await client.query('ROLLBACK'); // Rollback transaction on error
-    console.error('Bulk import transaction error:', err);
-    res.status(500).json({ error: 'Failed to perform bulk import due to a server error.' });
+    await client.query('ROLLBACK');
+    return res.status(500).json({ error: 'Import failed. Transaction aborted.' });
   } finally {
-    client.release(); // Release the client back to the pool
+    client.release();
   }
+
+  res.status(errors.length ? 207 : 200).json({
+    message: `${importedBooks.length} books imported${errors.length ? `, ${errors.length} issues` : ''}.`,
+    importedBooks,
+    errors,
+  });
 });
 
 // Setup for file uploads (book covers)
@@ -824,7 +853,11 @@ const coverUpload = multer({
 });
 
 // Endpoint to upload a book cover
-app.post('/api/books/:id/cover', authUtils.authenticateToken, coverUpload.single('cover'), async (req, res) => {
+app.post('/api/books/:id/cover', authUtils.authenticateToken, (req, res, next) => {
+  // Prevent missing ID
+  if (!req.params.id) return res.status(400).json({ error: 'Book ID required' });
+  next();
+}, coverUpload.single('cover'), async (req, res) => {
   const { id } = req.params;
   console.log(`Received cover upload request for book ID: ${id}`);
   if (!req.file) {
@@ -855,6 +888,17 @@ app.post('/api/books/:id/cover', authUtils.authenticateToken, coverUpload.single
 
 // Serve static files from the 'uploads' directory
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+app.use((err, req, res, next) => {
+  if (err.message === 'INVALID_CSV_TYPE') {
+    return res.status(400).json({ error: 'Only CSV files allowed.' });
+  }
+  if (err instanceof multer.MulterError) {
+    return res.status(400).json({ error: `Upload error: ${err.message}` });
+  }
+  next(err);
+});
+
 
 // Ensure uploads directory exists
 const uploadsDir = path.join(__dirname, 'uploads');
