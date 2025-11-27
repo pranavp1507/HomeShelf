@@ -134,6 +134,13 @@ E:\Mulampuzha-Library/
 │   ├── acme.json                    # Let's Encrypt certificates
 │   └── certs/                       # TLS certificates
 │
+├── e2e/                             # End-to-end tests (Playwright)
+│   ├── test-utils.ts                # Common test utilities
+│   ├── auth.spec.ts                 # Authentication flow tests (9 tests)
+│   ├── books.spec.ts                # Book management tests (13 tests)
+│   ├── members.spec.ts              # Member management tests (12 tests)
+│   └── loans.spec.ts                # Loan operations tests (13 tests)
+│
 ├── docs/                            # Documentation
 │   ├── app_plan.md                  # Development plan
 │   ├── app_status.md                # Status report
@@ -149,6 +156,8 @@ E:\Mulampuzha-Library/
 │   ├── deployment_options.md        # Deployment comparison
 │   └── advanced_setup.md            # Traefik setup guide
 │
+├── playwright.config.ts             # Playwright E2E test configuration
+├── package.json                     # Root package with test scripts
 ├── compose.yml                      # Docker Compose with Traefik (local.test)
 ├── compose.dev.yml                  # Simple dev setup (localhost ports)
 ├── compose.prod.yml                 # Production Docker Compose (Let's Encrypt)
@@ -755,6 +764,52 @@ pnpm test:coverage
 **Test Location:**
 All UI component tests are located in `client/src/components/ui/__tests__/`
 
+### End-to-End Testing
+The project uses **Playwright** for comprehensive E2E testing across multiple browsers.
+
+**Test Infrastructure:**
+- **Playwright 1.57.0** - Modern E2E testing framework
+- Multi-browser support (Chromium, Firefox, WebKit)
+- Mobile viewport testing (iPhone, Pixel)
+- Auto-wait and retry mechanisms
+- Screenshots and videos on failure
+- Trace viewer for debugging
+
+**Test Configuration:**
+- `playwright.config.ts` - Playwright configuration with browser matrix
+- `e2e/test-utils.ts` - Common test utilities (login, navigation, test data)
+- Automatic dev server startup before tests
+
+**Running E2E Tests:**
+```bash
+# Run all E2E tests
+pnpm test:e2e
+
+# Run with UI mode (recommended for development)
+pnpm test:e2e:ui
+
+# Run in headed mode (see browser)
+pnpm test:e2e:headed
+
+# Debug tests
+pnpm test:e2e:debug
+
+# View test report
+pnpm test:e2e:report
+
+# Run all tests (unit + E2E)
+pnpm test:all
+```
+
+**E2E Test Coverage (4 test suites, 50+ tests):**
+- **Authentication Flow** (9 tests) - Login, logout, auth persistence, protected routes, mobile navbar
+- **Book Management** (13 tests) - CRUD operations, search, filters, pagination, bulk import
+- **Member Management** (12 tests) - CRUD operations, search, validation, pagination, bulk import
+- **Loan Operations** (13 tests) - Borrow, return, loan history, filters, overdue indicators
+
+**Test Location:**
+All E2E tests are located in `e2e/` directory at project root.
+
 ### Common Issues
 1. **CORS errors**: Check CORS configuration in `server/index.js`
 2. **Auth failures**: Verify JWT_SECRET matches in .env and token validity
@@ -866,13 +921,16 @@ See detailed documentation in `docs/`:
 - End-to-end type safety
 - Estimated: 2-3 weeks (8 phases)
 
-**Phase 6: 🚧 IN PROGRESS - Testing & Quality Assurance**
-- ✅ Testing infrastructure setup (Vitest + React Testing Library)
-- ✅ UI component unit tests (8/10 components, 113 tests)
-  - Button, Card, Input, Select, Badge, EmptyState, ErrorMessage, Skeleton
-- 🔄 Remaining UI component tests (Modal, MultiSelect)
-- 🔄 Integration tests for key user flows
-- ⏭️ E2E tests (Playwright/Cypress) - Future
+**Phase 6: ✅ COMPLETE - Testing & Quality Assurance**
+- ✅ Testing infrastructure setup (Vitest + React Testing Library + Playwright)
+- ✅ UI component unit tests (10/10 components, 151 tests)
+  - Button, Card, Input, Select, Badge, Modal, MultiSelect, EmptyState, ErrorMessage, Skeleton
+- ✅ E2E tests with Playwright (4 test suites, 50+ tests)
+  - Authentication flow (9 tests)
+  - Book management (13 tests)
+  - Member management (12 tests)
+  - Loan operations (13 tests)
+- ✅ Multi-browser testing (Chromium, Firefox, WebKit, Mobile)
 - ⏭️ Coverage thresholds and CI integration - Future
 
 ---

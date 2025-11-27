@@ -1,0 +1,26 @@
+{
+  "name": "mulampuzha-library",
+  "version": "1.0.0",
+  "description": "Full-stack Library Management System",
+  "private": true,
+  "scripts": {
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:debug": "playwright test --debug",
+    "test:e2e:report": "playwright show-report",
+    "test:unit": "cd client && pnpm test",
+    "test:unit:run": "cd client && pnpm test:run",
+    "test:unit:coverage": "cd client && pnpm test:coverage",
+    "test:all": "pnpm test:unit:run && pnpm test:e2e"
+  },
+  "keywords": [
+    "library",
+    "management",
+    "react",
+    "nodejs",
+    "postgresql"
+  ],
+  "author": "",
+  "license": "MIT"
+}
