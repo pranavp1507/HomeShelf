@@ -3,6 +3,16 @@
 # ------------------------------------------------------
 FROM node:24-alpine AS build
 
+# Accept build arguments for Vite environment variables
+ARG VITE_API_URL
+ARG VITE_LIBRARY_NAME
+ARG VITE_LIBRARY_LOGO
+
+# Set them as environment variables for the build
+ENV VITE_API_URL=$VITE_API_URL
+ENV VITE_LIBRARY_NAME=$VITE_LIBRARY_NAME
+ENV VITE_LIBRARY_LOGO=$VITE_LIBRARY_LOGO
+
 WORKDIR /app
 
 # Copy package files only
@@ -17,7 +27,7 @@ RUN pnpm install --frozen-lockfile
 # Copy all project files
 COPY . .
 
-# Build
+# Build (environment variables are now available)
 RUN pnpm build
 
 # ------------------------------------------------------

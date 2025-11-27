@@ -1,0 +1,101 @@
+# Simple Development Docker Compose Configuration
+#
+# This is the RECOMMENDED setup for local development and testing.
+# Works with both Docker and Podman on all platforms (Windows, Mac, Linux).
+#
+# Usage:
+#   docker-compose -f compose.dev.yml up
+#   OR
+#   podman-compose -f compose.dev.yml up
+#
+# Access:
+#   Frontend: http://localhost:3000
+#   Backend:  http://localhost:3001/api
+#   Database: localhost:5432
+
+services:
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: library
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"  # Exposed directly - connect from host
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d library"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  server:
+    build:
+      context: ./server
+      dockerfile: Containerfile
+    command: ["sh", "start.sh"]
+    restart: unless-stopped
+    environment:
+      # Server Configuration
+      NODE_ENV: development
+      PORT: 3001
+
+      # Database Configuration
+      DATABASE_URL: postgres://user:password@postgres:5432/library
+
+      # JWT Secret - Development only, change in production
+      JWT_SECRET: "dev_secret_change_in_production"
+
+      # Google Books API (Optional)
+      GOOGLE_BOOKS_API_KEY: ${GOOGLE_BOOKS_API_KEY:-}
+
+      # Client URL (for CORS)
+      CLIENT_URL: ${CLIENT_URL:-http://localhost:3000}
+
+      # Email/SMTP Configuration (Optional)
+      ENABLE_EMAIL_NOTIFICATIONS: ${ENABLE_EMAIL_NOTIFICATIONS:-false}
+      SMTP_HOST: ${SMTP_HOST:-smtp.gmail.com}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_SECURE: ${SMTP_SECURE:-false}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-library@example.com}
+
+      # Overdue Notifications
+      ENABLE_OVERDUE_CHECKS: ${ENABLE_OVERDUE_CHECKS:-true}
+      OVERDUE_CHECK_INTERVAL: ${OVERDUE_CHECK_INTERVAL:-60}
+    ports:
+      - "3001:3001"  # Exposed directly - no Traefik needed
+    volumes:
+      - ./server:/app
+      - /app/node_modules  # Anonymous volume for node_modules
+      - uploads_data:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  client:
+    build:
+      context: ./client
+      dockerfile: Containerfile
+      target: build  # Use only the build stage for dev
+    command: ["pnpm", "dev"]
+    restart: unless-stopped
+    environment:
+      # Point to backend on localhost (from browser perspective)
+      VITE_API_URL: http://localhost:3001/api
+      VITE_LIBRARY_NAME: ${VITE_LIBRARY_NAME:-My Library}
+      VITE_LIBRARY_LOGO: ${VITE_LIBRARY_LOGO:-/Logo.svg}
+    ports:
+      - "3000:3000"  # Exposed directly - no Traefik needed
+    volumes:
+      - ./client:/app
+      - /app/node_modules  # Anonymous volume for node_modules
+    depends_on:
+      - server
+
+volumes:
+  postgres_data:
+  uploads_data:

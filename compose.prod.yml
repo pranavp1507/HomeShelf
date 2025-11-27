@@ -34,8 +34,40 @@ services:
   server:
     image: myapp/server:latest
     environment:
+      # Server Configuration
       NODE_ENV: production
+      PORT: 3001
+
+      # Database Configuration
       DATABASE_URL: postgres://user:password@postgres:5432/library
+
+      # JWT Secret - IMPORTANT: Change this in production!
+      # Generate one using: openssl rand -hex 32
+      JWT_SECRET: "CHANGE_THIS_IN_PRODUCTION"
+
+      # Google Books API (Optional)
+      # Get your API key from: https://console.cloud.google.com/apis/credentials
+      GOOGLE_BOOKS_API_KEY: ""
+
+      # Client URL (for CORS)
+      CLIENT_URL: "https://myapp.example.com"
+
+      # Email/SMTP Configuration (Optional)
+      # Set to 'true' to enable email notifications
+      ENABLE_EMAIL_NOTIFICATIONS: "false"
+      SMTP_HOST: "smtp.gmail.com"
+      SMTP_PORT: "587"
+      SMTP_SECURE: "false"
+      SMTP_USER: ""
+      SMTP_PASSWORD: ""
+      SMTP_FROM: "library@example.com"
+
+      # Overdue Notifications
+      # Set to 'false' to disable overdue checks
+      ENABLE_OVERDUE_CHECKS: "true"
+      OVERDUE_CHECK_INTERVAL: "60"
+    volumes:
+      - uploads_data:/app/uploads
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.server.rule=Host(`myapp.example.com`) && PathPrefix(`/api`)"
@@ -49,7 +81,15 @@ services:
   client:
     image: myapp/client:latest
     environment:
-      VITE_API_URL=https://myapp.example.com/api
+      # API Configuration
+      # Change to your domain: https://your-domain.com/api
+      VITE_API_URL: "https://myapp.example.com/api"
+
+      # Library Branding
+      # Customize your library name and logo
+      VITE_LIBRARY_NAME: "My Library"
+      # Use a local path or external URL for the logo
+      VITE_LIBRARY_LOGO: "/Logo.svg"
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.client.rule=Host(`myapp.example.com`)"
@@ -73,3 +113,5 @@ services:
 
 volumes:
   postgres_data:
+  uploads_data:
+  db_backups:
