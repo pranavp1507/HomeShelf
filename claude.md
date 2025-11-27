@@ -18,6 +18,9 @@ This is a **full-stack Library Management System** built with React, Node.js, Ex
 - **Lucide React v0.309.0** for modern icons
 - **React Router DOM 7.9.6** for routing
 - **Recharts 3.4.1** for data visualization
+- **Vitest 4.0.14** for unit testing
+- **React Testing Library 16.3.0** for component testing
+- **Happy-DOM 20.0.10** for DOM simulation in tests
 - **pnpm 10.22.0** as package manager
 
 ### Backend
@@ -56,6 +59,7 @@ E:\Mulampuzha-Library/
 │   │   │   │   ├── EmptyState.tsx   # Empty state component
 │   │   │   │   ├── ErrorMessage.tsx # Error message component
 │   │   │   │   ├── Skeleton.tsx     # Loading skeleton
+│   │   │   │   ├── __tests__/       # UI component tests (8 test files, 113 tests)
 │   │   │   │   └── index.ts         # Barrel exports
 │   │   │   ├── AuthContext.tsx      # Auth state management
 │   │   │   ├── Dashboard.tsx        # Main dashboard with stats
@@ -82,11 +86,15 @@ E:\Mulampuzha-Library/
 │   │   │   ├── Pagination.tsx       # Pagination component
 │   │   │   ├── OnboardingContext.tsx # Onboarding state
 │   │   │   └── *Skeleton.tsx        # Loading skeletons
+│   │   ├── test/                    # Test configuration
+│   │   │   ├── setup.ts             # Global test setup & mocks
+│   │   │   └── utils.tsx            # Test utilities & provider wrappers
 │   │   ├── App.tsx                  # Main app with routing & state
 │   │   ├── main.tsx                 # Entry point
 │   │   ├── index.css                # Tailwind CSS v4 config
 │   │   └── assets/                  # Static assets
 │   ├── Containerfile                # Frontend Docker image
+│   ├── vitest.config.ts             # Vitest configuration
 │   ├── vite.config.ts               # Vite configuration
 │   ├── package.json                 # Dependencies
 │   ├── .env                         # Environment variables
@@ -702,6 +710,51 @@ server:
 - Verify database state with psql or GUI client
 - Check JWT token validity at jwt.io
 
+### Frontend Testing
+The project uses **Vitest** with **React Testing Library** for comprehensive unit testing.
+
+**Test Infrastructure:**
+- **Vitest 4.0.14** - Fast Vite-native test framework
+- **React Testing Library 16.3.0** - Component testing utilities
+- **Happy-DOM 20.0.10** - Lightweight DOM implementation
+- **@testing-library/user-event** - User interaction simulation
+- **@testing-library/jest-dom** - Custom matchers for DOM assertions
+
+**Test Configuration:**
+- `vitest.config.ts` - Vitest configuration with Tailwind CSS support
+- `src/test/setup.ts` - Global test setup with browser API mocks (matchMedia, IntersectionObserver, localStorage)
+- `src/test/utils.tsx` - Custom render function with AuthProvider and OnboardingProvider wrappers
+
+**Running Tests:**
+```bash
+cd client
+
+# Run tests in watch mode
+pnpm test
+
+# Run tests once
+pnpm test:run
+
+# Run tests with UI
+pnpm test:ui
+
+# Generate coverage report
+pnpm test:coverage
+```
+
+**Test Coverage (113 tests):**
+- **Button** (11 tests) - Variants, sizes, icons, disabled state, click events
+- **Card** (14 tests) - Variants, padding, hover/clickable states, motion animations
+- **Input** (17 tests) - Label, error/helper text, icons, full width, user input
+- **Select** (16 tests) - Options rendering, error/helper text, selection changes
+- **Badge** (15 tests) - Variants (default, success, warning, error, info), sizes
+- **EmptyState** (10 tests) - Icon, title, description, action button
+- **ErrorMessage** (15 tests) - Variants (error, warning, info), close button
+- **Skeleton** (15 tests) - Variants (text, circular, rectangular), custom dimensions
+
+**Test Location:**
+All UI component tests are located in `client/src/components/ui/__tests__/`
+
 ### Common Issues
 1. **CORS errors**: Check CORS configuration in `server/index.js`
 2. **Auth failures**: Verify JWT_SECRET matches in .env and token validity
@@ -813,12 +866,14 @@ See detailed documentation in `docs/`:
 - End-to-end type safety
 - Estimated: 2-3 weeks (8 phases)
 
-**Phase 6: PLANNED - Testing & Quality Assurance**
-- Client-side unit tests (Jest/Vitest)
-- Integration tests (React Testing Library)
-- E2E tests (Playwright/Cypress)
-- Advanced reporting and analytics
-- Data export functionality
+**Phase 6: 🚧 IN PROGRESS - Testing & Quality Assurance**
+- ✅ Testing infrastructure setup (Vitest + React Testing Library)
+- ✅ UI component unit tests (8/10 components, 113 tests)
+  - Button, Card, Input, Select, Badge, EmptyState, ErrorMessage, Skeleton
+- 🔄 Remaining UI component tests (Modal, MultiSelect)
+- 🔄 Integration tests for key user flows
+- ⏭️ E2E tests (Playwright/Cypress) - Future
+- ⏭️ Coverage thresholds and CI integration - Future
 
 ---
 
