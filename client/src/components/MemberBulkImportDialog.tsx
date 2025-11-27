@@ -3,7 +3,7 @@ import { config } from '../config';
 import { Download, Upload, FileText } from 'lucide-react';
 import { Modal, Button } from './ui';
 
-interface BulkImportDialogProps {
+interface MemberBulkImportDialogProps {
   open: boolean;
   onClose: () => void;
   onImportSuccess: () => void;
@@ -15,12 +15,12 @@ interface BulkImportDialogProps {
 }
 
 
-const BulkImportDialog = ({
+const MemberBulkImportDialog = ({
   open,
   onClose,
   onImportSuccess,
   setNotification,
-}: BulkImportDialogProps) => {
+}: MemberBulkImportDialogProps) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
 
@@ -33,13 +33,13 @@ const BulkImportDialog = ({
   };
 
   const handleDownloadTemplate = () => {
-    const csvContent = "title,author,isbn\n";
+    const csvContent = "name,email,phone\n";
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement("a");
     if (link.download !== undefined) {
       const url = URL.createObjectURL(blob);
       link.setAttribute("href", url);
-      link.setAttribute("download", "mulampuzha_books_template.csv");
+      link.setAttribute("download", "mulampuzha_members_template.csv");
       link.style.visibility = 'hidden';
       document.body.appendChild(link);
       link.click();
@@ -54,29 +54,33 @@ const BulkImportDialog = ({
     }
 
     setIsUploading(true);
-    setNotification({ open: true, message: 'Uploading books...', severity: 'info' });
+    setNotification({ open: true, message: 'Uploading members...', severity: 'info' });
 
     const formData = new FormData();
     formData.append('file', selectedFile);
 
     try {
-      const response = await fetch(`${config.apiUrl}/books/bulk-import`, {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${config.apiUrl}/members/bulk-import`, {
         method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
         body: formData,
       });
 
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || 'Failed to bulk import books');
+        throw new Error(result.error || 'Failed to bulk import members');
       }
 
       setNotification({
         open: true,
-        message: result.message || 'Books imported successfully!',
+        message: result.message || 'Members imported successfully!',
         severity: result.errors && result.errors.length > 0 ? 'warning' : 'success',
       });
-      onImportSuccess(); // Trigger parent to refetch books
+      onImportSuccess(); // Trigger parent to refetch members
       onClose(); // Close dialog
     } catch (error: any) {
       console.error('Bulk import error:', error);
@@ -91,15 +95,15 @@ const BulkImportDialog = ({
     <Modal
       open={open}
       onClose={onClose}
-      title="Bulk Import Books"
+      title="Bulk Import Members"
       size="sm"
     >
       <div className="space-y-6">
         {/* Instructions */}
         <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
           <p className="text-sm text-blue-800 dark:text-blue-300">
-            Download the template, fill in your book details, and upload the CSV file.
-            Only 'title', 'author', and 'isbn' columns will be processed.
+            Download the template, fill in your member details, and upload the CSV file.
+            Only 'name', 'email', and 'phone' columns will be processed. Phone is optional.
           </p>
         </div>
 
@@ -124,7 +128,7 @@ const BulkImportDialog = ({
               accept=".csv"
               onChange={handleFileChange}
               className="hidden"
-              id="csv-upload"
+              id="csv-upload-members"
             />
             <div className="border-2 border-dashed border-border rounded-lg p-6 text-center cursor-pointer hover:border-primary hover:bg-background-secondary transition-colors">
               <FileText className="h-12 w-12 text-text-tertiary mx-auto mb-3" />
@@ -163,4 +167,4 @@ const BulkImportDialog = ({
   );
 };
 
-export default BulkImportDialog;
+export default MemberBulkImportDialog;

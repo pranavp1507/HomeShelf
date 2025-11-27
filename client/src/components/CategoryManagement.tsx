@@ -1,38 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import {
-  Container,
-  Typography,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  IconButton,
-  TextField,
-  Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Box,
-  Alert,
-} from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import AddIcon from '@mui/icons-material/Add';
+import { useState, useEffect } from 'react';
+import { config } from '../config';
+import { Edit2, Trash2, Plus, FolderTree } from 'lucide-react';
 import { useAuth } from './AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { Card, Button, Input, Modal, EmptyState, ErrorMessage } from './ui';
 
 interface Category {
   id: number;
   name: string;
 }
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
-const CategoryManagement: React.FC = () => {
+const CategoryManagement = () => {
   const { token, user } = useAuth();
   const navigate = useNavigate();
   const [categories, setCategories] = useState<Category[]>([]);
@@ -52,7 +31,7 @@ const CategoryManagement: React.FC = () => {
   const fetchCategories = async () => {
     setError(null);
     try {
-      const response = await fetch(`${API_URL}/categories`);
+      const response = await fetch(`${config.apiUrl}/categories`);
       if (!response.ok) {
         throw new Error('Failed to fetch categories');
       }
@@ -70,7 +49,7 @@ const CategoryManagement: React.FC = () => {
       return;
     }
     try {
-      const response = await fetch(`${API_URL}/categories`, {
+      const response = await fetch(`${config.apiUrl}/categories`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -106,7 +85,7 @@ const CategoryManagement: React.FC = () => {
       return;
     }
     try {
-      const response = await fetch(`${API_URL}/categories/${editCategory.id}`, {
+      const response = await fetch(`${config.apiUrl}/categories/${editCategory.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -129,7 +108,7 @@ const CategoryManagement: React.FC = () => {
     setError(null);
     if (window.confirm('Are you sure you want to delete this category?')) {
       try {
-        const response = await fetch(`${API_URL}/categories/${id}`, {
+        const response = await fetch(`${config.apiUrl}/categories/${id}`, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -148,86 +127,151 @@ const CategoryManagement: React.FC = () => {
 
   if (user?.role !== 'admin') {
     return (
-      <Container>
-        <Alert severity="error">Access Denied: You must be an administrator to manage categories.</Alert>
-      </Container>
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+          <p className="text-red-800 dark:text-red-300 font-medium">
+            Access Denied: You must be an administrator to manage categories.
+          </p>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Container maxWidth="md">
-      <Typography variant="h4" component="h2" gutterBottom>
-        Category Management
-      </Typography>
+    <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="flex items-center gap-3 mb-6">
+        <FolderTree className="h-8 w-8 text-primary" />
+        <h1 className="text-3xl font-bold text-text-primary">Category Management</h1>
+      </div>
 
-      <Box sx={{ display: 'flex', gap: 2, mb: 4 }}>
-        <TextField
-          label="New Category Name"
-          variant="outlined"
-          value={newCategoryName}
-          onChange={(e) => setNewCategoryName(e.target.value)}
-          fullWidth
+      {/* Add Category Section */}
+      <Card className="mb-6">
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex-1">
+            <Input
+              label="New Category Name"
+              value={newCategoryName}
+              onChange={(e) => setNewCategoryName(e.target.value)}
+              fullWidth
+              placeholder="Enter category name"
+            />
+          </div>
+          <div className="flex items-end">
+            <Button
+              variant="primary"
+              icon={<Plus className="h-5 w-5" />}
+              onClick={handleAddCategory}
+              disabled={!newCategoryName.trim()}
+              className="w-full sm:w-auto"
+            >
+              Add Category
+            </Button>
+          </div>
+        </div>
+      </Card>
+
+      {/* Error Message */}
+      {error && (
+        <ErrorMessage
+          message={error}
+          onClose={() => setError(null)}
+          className="mb-6"
         />
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={handleAddCategory}
-          disabled={!newCategoryName.trim()}
+      )}
+
+      {/* Categories Table */}
+      {categories.length === 0 ? (
+        <Card>
+          <EmptyState
+            icon={FolderTree}
+            title="No Categories Yet"
+            description="Create your first category using the form above to organize your book collection!"
+          />
+        </Card>
+      ) : (
+        <Card>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-border">
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-text-primary">ID</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-text-primary">Name</th>
+                  <th className="text-right py-3 px-4 text-sm font-semibold text-text-primary">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {categories.map((category) => (
+                  <tr key={category.id} className="border-b border-border hover:bg-background-secondary transition-colors">
+                    <td className="py-3 px-4 text-sm text-text-primary">{category.id}</td>
+                    <td className="py-3 px-4 text-sm text-text-primary font-medium">{category.name}</td>
+                    <td className="py-3 px-4 text-right">
+                      <div className="flex justify-end gap-2">
+                        <button
+                          onClick={() => handleEditClick(category)}
+                          className="p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 text-blue-600 dark:text-blue-400 transition-colors"
+                          aria-label="Edit category"
+                        >
+                          <Edit2 className="h-5 w-5" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteCategory(category.id)}
+                          className="p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 transition-colors"
+                          aria-label="Delete category"
+                        >
+                          <Trash2 className="h-5 w-5" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+                }
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      )}
+
+      {/* Edit Dialog */}
+      <Modal
+        open={openDialog}
+        onClose={handleEditDialogClose}
+        title="Edit Category"
+        size="sm"
+      >
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleEditSubmit();
+          }}
+          className="space-y-4"
         >
-          Add Category
-        </Button>
-      </Box>
-
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>ID</TableCell>
-              <TableCell>Name</TableCell>
-              <TableCell align="right">Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {categories.map((category) => (
-              <TableRow key={category.id}>
-                <TableCell>{category.id}</TableCell>
-                <TableCell>{category.name}</TableCell>
-                <TableCell align="right">
-                  <IconButton onClick={() => handleEditClick(category)}>
-                    <EditIcon />
-                  </IconButton>
-                  <IconButton onClick={() => handleDeleteCategory(category.id)}>
-                    <DeleteIcon />
-                  </IconButton>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
-
-      <Dialog open={openDialog} onClose={handleEditDialogClose}>
-        <DialogTitle>Edit Category</DialogTitle>
-        <DialogContent>
-          <TextField
-            autoFocus
-            margin="dense"
+          <Input
             label="Category Name"
-            type="text"
-            fullWidth
-            variant="outlined"
             value={editCategory?.name || ''}
             onChange={(e) => setEditCategory(prev => prev ? { ...prev, name: e.target.value } : null)}
+            fullWidth
+            autoFocus
           />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleEditDialogClose}>Cancel</Button>
-          <Button onClick={handleEditSubmit} disabled={!editCategory?.name.trim()}>Save Changes</Button>
-        </DialogActions>
-      </Dialog>
-    </Container>
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-border">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={handleEditDialogClose}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="primary"
+              disabled={!editCategory?.name.trim()}
+            >
+              Save Changes
+            </Button>
+          </div>
+        </form>
+      </Modal>
+    </div>
   );
 };
 

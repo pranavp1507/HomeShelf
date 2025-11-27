@@ -1,20 +1,5 @@
 import { useState, useEffect, type ReactNode, useCallback, useMemo } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { ThemeProvider } from '@mui/material/styles';
-import getTheme from './theme';
-import {
-  Container,
-  CssBaseline,
-  Box,
-  TextField,
-  Button,
-  Select,
-  MenuItem,
-  InputLabel,
-  FormControl,
-  Typography, // Add Typography here
-  type SelectChangeEvent,
-} from '@mui/material';
 import BookList from './components/BookList';
 import BookForm from './components/BookForm';
 import MemberList from './components/MemberList';
@@ -23,15 +8,27 @@ import LoanManager from './components/LoanManager';
 import LoanHistory from './components/LoanHistory';
 import Dashboard from './components/Dashboard';
 import BulkImportDialog from './components/BulkImportDialog';
+import MemberBulkImportDialog from './components/MemberBulkImportDialog';
 import Notification from './components/Notification';
-import Login from './components/Login'; // Import Login component
-import Navbar from './components/Navbar'; // Import Navbar component
-import { useAuth } from './components/AuthContext'; // Import useAuth hook
+import Pagination from './components/Pagination';
+import Login from './components/Login';
+import ForgotPassword from './components/ForgotPassword';
+import ResetPassword from './components/ResetPassword';
+import Navbar from './components/Navbar';
+import { useAuth } from './components/AuthContext';
 import CategoryManagement from './components/CategoryManagement';
-import UserManagement from './components/UserManagement'; // Import UserManagement component
-import Autocomplete from '@mui/material/Autocomplete'; // Added for category filter
-import Chip from '@mui/material/Chip'; // Added for category filter
-import Setup from './components/Setup'; // Import Setup component
+import UserManagement from './components/UserManagement';
+import Setup from './components/Setup';
+import BookListSkeleton from './components/BookListSkeleton';
+import MemberListSkeleton from './components/MemberListSkeleton';
+import WelcomeWizard from './components/WelcomeWizard';
+import FeatureTour from './components/FeatureTour';
+import DataExport from './components/DataExport';
+import Settings from './components/Settings';
+import { useOnboarding } from './components/OnboardingContext';
+import { config } from './config';
+import { Input, Button, Select, MultiSelect } from './components/ui';
+import { Plus, Upload, Loader2 } from 'lucide-react';
 import './App.css';
 
 // Define the book type
@@ -58,8 +55,6 @@ interface Member {
   phone?: string;
 }
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-
 // ProtectedRoute component
 const ProtectedRoute: React.FC<{ children: ReactNode }> = ({ children }) => {
   const { token } = useAuth();
@@ -75,6 +70,15 @@ function App() {
     return (storedMode === 'light' || storedMode === 'dark') ? storedMode : 'light';
   });
 
+  // Apply dark mode class to document
+  useEffect(() => {
+    if (mode === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [mode]);
+
   const colorMode = useMemo(
     () => ({
       toggleColorMode: () => {
@@ -88,11 +92,13 @@ function App() {
     [],
   );
 
-  const theme = useMemo(() => getTheme(mode), [mode]);
-
   const [books, setBooks] = useState<Book[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
   const [allCategories, setAllCategories] = useState<Category[]>([]); // For category filter options
+
+  // Loading states
+  const [booksLoading, setBooksLoading] = useState(false);
+  const [membersLoading, setMembersLoading] = useState(false);
 
   // Filter and Sort states for Books
   const [bookSearchQuery, setBookSearchQuery] = useState('');
@@ -101,9 +107,22 @@ function App() {
   const [bookSortBy, setBookSortBy] = useState<string>('id');
   const [bookSortOrder, setBookSortOrder] = useState<"asc" | "desc">('asc');
 
+  // Pagination states for Books
+  const [bookPage, setBookPage] = useState(1);
+  const [bookLimit, setBookLimit] = useState(25);
+  const [bookTotalCount, setBookTotalCount] = useState(0);
+  const [bookTotalPages, setBookTotalPages] = useState(0);
+
   // Sort states for Members
   const [memberSortBy, setMemberSortBy] = useState<string>('id');
   const [memberSortOrder, setMemberSortOrder] = useState<"asc" | "desc">('asc');
+  const [memberSearchQuery, setMemberSearchQuery] = useState('');
+
+  // Pagination states for Members
+  const [memberPage, setMemberPage] = useState(1);
+  const [memberLimit, setMemberLimit] = useState(25);
+  const [memberTotalCount, setMemberTotalCount] = useState(0);
+  const [memberTotalPages, setMemberTotalPages] = useState(0);
 
   const [notification, setNotification] = useState({
     open: false,
@@ -126,14 +145,18 @@ function App() {
   const [isMemberFormOpen, setIsMemberFormOpen] = useState(false);
   const [memberToEdit, setMemberToEdit] = useState<Member | null>(null);
 
+  // State for Member Bulk Import Dialog
+  const [isMemberBulkImportOpen, setIsMemberBulkImportOpen] = useState(false);
+
   const { token, logout } = useAuth();
+  const { startWelcome } = useOnboarding();
   const [isSetupNeeded, setIsSetupNeeded] = useState<boolean | null>(null); // New state for setup status
   const [setupChecked, setSetupChecked] = useState(false); // New state to check if setup status has been verified
 
   useEffect(() => {
     const checkSetupStatus = async () => {
       try {
-        const response = await fetch(`${API_URL}/auth/setup-status`);
+        const response = await fetch(`${config.apiUrl}/auth/setup-status`);
         if (!response.ok) throw new Error('Failed to fetch setup status');
         const data = await response.json();
         if (data.isSetupNeeded) {
@@ -155,7 +178,7 @@ function App() {
     // Only fetch if setup is complete and user is authenticated
     if (!token || isSetupNeeded === true) return;
     try {
-      const response = await fetch(`${API_URL}/categories`);
+      const response = await fetch(`${config.apiUrl}/categories`);
       if (!response.ok) throw new Error('Failed to fetch categories');
       const data = await response.json();
       setAllCategories(data);
@@ -167,8 +190,9 @@ function App() {
 
   const fetchBooks = useCallback(async () => {
     if (!token) return;
+    setBooksLoading(true);
     try {
-      let url = `${API_URL}/books?sortBy=${bookSortBy}&sortOrder=${bookSortOrder}`;
+      let url = `${config.apiUrl}/books?sortBy=${bookSortBy}&sortOrder=${bookSortOrder}&page=${bookPage}&limit=${bookLimit}`;
       if (bookSearchQuery) url += `&search=${bookSearchQuery}`;
       if (availableStatusFilter !== 'all') url += `&availableStatus=${availableStatusFilter}`;
       if (categoryFilter.length > 0) url += `&categoryIds=${categoryFilter.map(cat => cat.id).join(',')}`;
@@ -177,36 +201,63 @@ function App() {
         headers: { 'Authorization': `Bearer ${token}` },
       });
       if (!response.ok) throw new Error('Failed to fetch books');
-      const data = await response.json();
-      setBooks(data);
+      const result = await response.json();
+
+      // Handle paginated response
+      setBooks(result.data || []);
+      if (result.pagination) {
+        setBookTotalCount(result.pagination.totalCount);
+        setBookTotalPages(result.pagination.totalPages);
+      }
     } catch (error: any) {
       console.error(error);
       setNotification({ open: true, message: error.message, severity: 'error' });
+    } finally {
+      setBooksLoading(false);
     }
-  }, [token, bookSearchQuery, availableStatusFilter, categoryFilter, bookSortBy, bookSortOrder]);
+  }, [token, bookSearchQuery, availableStatusFilter, categoryFilter, bookSortBy, bookSortOrder, bookPage, bookLimit]);
 
   const fetchMembers = useCallback(async () => {
     if (!token) return;
+    setMembersLoading(true);
     try {
-      const response = await fetch(`${API_URL}/members?sortBy=${memberSortBy}&sortOrder=${memberSortOrder}`, {
+      let url = `${config.apiUrl}/members?sortBy=${memberSortBy}&sortOrder=${memberSortOrder}&page=${memberPage}&limit=${memberLimit}`;
+      if (memberSearchQuery) url += `&search=${memberSearchQuery}`;
+
+      const response = await fetch(url, {
         headers: { 'Authorization': `Bearer ${token}` },
       });
       if (!response.ok) throw new Error('Failed to fetch members');
-      const data = await response.json();
-      setMembers(data);
+      const result = await response.json();
+
+      // Handle paginated response
+      setMembers(result.data || []);
+      if (result.pagination) {
+        setMemberTotalCount(result.pagination.totalCount);
+        setMemberTotalPages(result.pagination.totalPages);
+      }
     } catch (error: any) {
       console.error(error);
       setNotification({ open: true, message: error.message, severity: 'error' });
+    } finally {
+      setMembersLoading(false);
     }
-  }, [token, memberSortBy, memberSortOrder]);
+  }, [token, memberSortBy, memberSortOrder, memberPage, memberLimit, memberSearchQuery]);
 
   useEffect(() => {
     if (setupChecked && !isSetupNeeded && token) {
       fetchBooks();
       fetchMembers();
       fetchAllCategories();
+
+      // Check if user has completed onboarding
+      const hasCompletedWelcome = localStorage.getItem('onboarding_welcome_completed') === 'true';
+      if (!hasCompletedWelcome) {
+        // Show welcome wizard for first-time users
+        setTimeout(() => startWelcome(), 500); // Small delay for smooth transition
+      }
     }
-  }, [token, fetchBooks, fetchMembers, fetchAllCategories, isSetupNeeded, setupChecked]);
+  }, [token, fetchBooks, fetchMembers, fetchAllCategories, isSetupNeeded, setupChecked, startWelcome]);
 
   const handleBookOpenForm = (book: Book | null = null) => {
     setBookToEdit(book);
@@ -220,7 +271,7 @@ function App() {
 
   const handleBookFormSubmit = async (bookData: Partial<Book>) => {
     const method = bookData.id ? 'PUT' : 'POST';
-    const url = bookData.id ? `${API_URL}/books/${bookData.id}` : `${API_URL}/books`;
+    const url = bookData.id ? `${config.apiUrl}/books/${bookData.id}` : `${config.apiUrl}/books`;
 
     try {
       const response = await fetch(url, {
@@ -256,7 +307,7 @@ function App() {
   const handleBookDelete = async (id: number) => {
     if (window.confirm('Are you sure you want to delete this book?')) {
       try {
-        const response = await fetch(`${API_URL}/books/${id}`, {
+        const response = await fetch(`${config.apiUrl}/books/${id}`, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -287,7 +338,7 @@ function App() {
 
   const handleMemberFormSubmit = async (memberData: Partial<Member>) => {
     const method = memberData.id ? 'PUT' : 'POST';
-    const url = memberData.id ? `${API_URL}/members/${memberData.id}` : `${API_URL}/members`;
+    const url = memberData.id ? `${config.apiUrl}/members/${memberData.id}` : `${config.apiUrl}/members`;
 
     try {
       const response = await fetch(url, {
@@ -320,7 +371,7 @@ function App() {
   const handleMemberDelete = async (id: number) => {
     if (window.confirm('Are you sure you want to delete this member?')) {
       try {
-        const response = await fetch(`${API_URL}/members/${id}`, {
+        const response = await fetch(`${config.apiUrl}/members/${id}`, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -345,21 +396,25 @@ function App() {
 
 
   if (!setupChecked) {
-    return <Container sx={{ mt: 4 }}><Typography>Loading application...</Typography></Container>;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
   }
 
   return (
-    <ThemeProvider theme={theme}>
       <BrowserRouter>
-        <CssBaseline />
         <Navbar toggleColorMode={colorMode.toggleColorMode} currentMode={mode} />
-        <Container sx={{ mt: 4 }}>
+        <div className="container mx-auto px-4 mt-6">
           <Routes>
             {isSetupNeeded ? (
               <Route path="*" element={<Setup onSetupComplete={handleSetupComplete} />} />
             ) : (
               <>
                 <Route path="/login" element={<Login />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/setup" element={<Setup onSetupComplete={handleSetupComplete} />} />
                 <Route path="/" element={<Navigate to="/dashboard" />} />
                 <Route
@@ -374,74 +429,82 @@ function App() {
                   path="/books"
                   element={
                     <ProtectedRoute>
-                      <Box>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, flexWrap: 'wrap', gap: 2 }}>
-                          <TextField
-                            label="Search Books"
-                            variant="outlined"
-                            size="small"
-                            value={bookSearchQuery}
-                            onChange={(e) => setBookSearchQuery(e.target.value)}
-                            sx={{ width: '200px' }}
-                          />
-                          <FormControl size="small" sx={{ width: '150px' }}>
-                            <InputLabel>Availability</InputLabel>
+                      <div>
+                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+                          <div className="flex flex-col sm:flex-row gap-4 flex-1">
+                            <Input
+                              label="Search Books"
+                              value={bookSearchQuery}
+                              onChange={(e) => setBookSearchQuery(e.target.value)}
+                              placeholder="Search by title, author, or ISBN"
+                              className="sm:min-w-[200px]"
+                            />
                             <Select
-                              value={availableStatusFilter}
                               label="Availability"
-                              onChange={(e: SelectChangeEvent) => setAvailableStatusFilter(e.target.value)}
-                            >
-                              <MenuItem value="all">All</MenuItem>
-                              <MenuItem value="true">Available</MenuItem>
-                              <MenuItem value="false">Borrowed</MenuItem>
-                            </Select>
-                          </FormControl>
-                          <Autocomplete
-                            multiple
-                            id="book-categories-filter"
-                            options={allCategories}
-                            getOptionLabel={(option) => option.name}
-                            value={categoryFilter}
-                            onChange={(_event, newValue) => {
-                              setCategoryFilter(newValue);
-                            }}
-                            renderTags={(value, getTagProps) =>
-                              value.map((option, index) => (
-                                <Chip variant="outlined" label={option.name} {...getTagProps({ index })} />
-                              ))
-                            }
-                            renderInput={(params) => (
-                              <TextField
-                                {...params}
-                                variant="outlined"
+                              value={availableStatusFilter}
+                              onChange={(e) => setAvailableStatusFilter(e.target.value)}
+                              options={[
+                                { value: 'all', label: 'All' },
+                                { value: 'true', label: 'Available' },
+                                { value: 'false', label: 'Borrowed' }
+                              ]}
+                              className="sm:min-w-[150px]"
+                            />
+                            <div className="sm:min-w-[250px]">
+                              <MultiSelect
                                 label="Filter by Categories"
+                                options={allCategories}
+                                value={categoryFilter}
+                                onChange={(newValue) => setCategoryFilter(newValue)}
                                 placeholder="Select categories"
-                                size="small"
+                                fullWidth
                               />
-                            )}
-                            sx={{ width: '250px' }}
-                          />
-                          <Box sx={{ display: 'flex', gap: 1 }}>
-                            <Button variant="contained" onClick={() => handleBookOpenForm()}>
+                            </div>
+                          </div>
+                          <div className="flex gap-2 w-full sm:w-auto">
+                            <Button
+                              variant="primary"
+                              icon={<Plus className="h-5 w-5" />}
+                              onClick={() => handleBookOpenForm()}
+                              fullWidth
+                            >
                               Add New Book
                             </Button>
-                            <Button variant="contained" onClick={() => setIsBulkImportOpen(true)}>
+                            <Button
+                              variant="secondary"
+                              icon={<Upload className="h-5 w-5" />}
+                              onClick={() => setIsBulkImportOpen(true)}
+                              fullWidth
+                            >
                               Bulk Import
                             </Button>
-                          </Box>
-                        </Box>
-                        <BookList
-                          books={books}
-                          onEdit={handleBookOpenForm}
-                          onDelete={handleBookDelete}
-                          sortBy={bookSortBy}
-                          sortOrder={bookSortOrder}
-                          onSortChange={(newSortBy, newSortOrder) => {
-                            setBookSortBy(newSortBy);
-                            setBookSortOrder(newSortOrder);
-                          }}
+                          </div>
+                        </div>
+                        {booksLoading ? (
+                          <BookListSkeleton />
+                        ) : (
+                          <BookList
+                            books={books}
+                            onEdit={handleBookOpenForm}
+                            onDelete={handleBookDelete}
+                            onAdd={() => handleBookOpenForm(null)}
+                            sortBy={bookSortBy}
+                            sortOrder={bookSortOrder}
+                            onSortChange={(newSortBy, newSortOrder) => {
+                              setBookSortBy(newSortBy);
+                              setBookSortOrder(newSortOrder);
+                            }}
+                          />
+                        )}
+                        <Pagination
+                          page={bookPage}
+                          totalPages={bookTotalPages}
+                          totalCount={bookTotalCount}
+                          limit={bookLimit}
+                          onPageChange={setBookPage}
+                          onLimitChange={setBookLimit}
                         />
-                      </Box>
+                      </div>
                     </ProtectedRoute>
                   }
                 />
@@ -449,24 +512,62 @@ function App() {
                   path="/members"
                   element={
                     <ProtectedRoute>
-                      <Box>
-                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
-                          <Button variant="contained" onClick={() => handleMemberOpenForm()}>
-                            Add New Member
-                          </Button>
-                        </Box>
-                        <MemberList
-                          members={members}
-                          onEdit={handleMemberOpenForm}
-                          onDelete={handleMemberDelete}
-                          sortBy={memberSortBy}
-                          sortOrder={memberSortOrder}
-                          onSortChange={(newSortBy, newSortOrder) => {
-                            setMemberSortBy(newSortBy);
-                            setMemberSortOrder(newSortOrder);
-                          }}
+                      <div>
+                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+                          <Input
+                            label="Search members"
+                            value={memberSearchQuery}
+                            onChange={(e) => {
+                              setMemberSearchQuery(e.target.value);
+                              setMemberPage(1);
+                            }}
+                            placeholder="Search by name, email, or phone"
+                            className="flex-1 sm:min-w-[300px]"
+                          />
+                          <div className="flex gap-2 w-full sm:w-auto">
+                            <Button
+                              variant="primary"
+                              icon={<Plus className="h-5 w-5" />}
+                              onClick={() => handleMemberOpenForm()}
+                              fullWidth
+                            >
+                              Add New Member
+                            </Button>
+                            <Button
+                              variant="secondary"
+                              icon={<Upload className="h-5 w-5" />}
+                              onClick={() => setIsMemberBulkImportOpen(true)}
+                              fullWidth
+                            >
+                              Bulk Import
+                            </Button>
+                          </div>
+                        </div>
+                        {membersLoading ? (
+                          <MemberListSkeleton />
+                        ) : (
+                          <MemberList
+                            members={members}
+                            onEdit={handleMemberOpenForm}
+                            onDelete={handleMemberDelete}
+                            onAdd={() => handleMemberOpenForm(null)}
+                            sortBy={memberSortBy}
+                            sortOrder={memberSortOrder}
+                            onSortChange={(newSortBy, newSortOrder) => {
+                              setMemberSortBy(newSortBy);
+                              setMemberSortOrder(newSortOrder);
+                            }}
+                          />
+                        )}
+                        <Pagination
+                          page={memberPage}
+                          totalPages={memberTotalPages}
+                          totalCount={memberTotalCount}
+                          limit={memberLimit}
+                          onPageChange={setMemberPage}
+                          onLimitChange={setMemberLimit}
                         />
-                      </Box>
+                      </div>
                     </ProtectedRoute>
                   }
                 />
@@ -474,14 +575,14 @@ function App() {
                   path="/loans"
                   element={
                     <ProtectedRoute>
-                      <Box>
+                      <div>
                         <LoanManager
                           books={books}
                           members={members}
                           onLoanChange={fetchBooks}
                           setNotification={setNotification}
                         />
-                      </Box>
+                      </div>
                     </ProtectedRoute>
                   }
                 />
@@ -489,9 +590,9 @@ function App() {
                   path="/loan-history"
                   element={
                     <ProtectedRoute>
-                      <Box>
+                      <div>
                         <LoanHistory />
-                      </Box>
+                      </div>
                     </ProtectedRoute>
                   }
                 />
@@ -510,10 +611,27 @@ function App() {
                                     <UserManagement />
                                   </ProtectedRoute>
                                 }
-                              />              </>
+                              />
+                              <Route
+                                path="/export"
+                                element={
+                                  <ProtectedRoute>
+                                    <DataExport />
+                                  </ProtectedRoute>
+                                }
+                              />
+                              <Route
+                                path="/settings"
+                                element={
+                                  <ProtectedRoute>
+                                    <Settings />
+                                  </ProtectedRoute>
+                                }
+                              />
+              </>
             )}
           </Routes>
-        </Container>
+        </div>
         <BookForm
           open={isBookFormOpen}
           onClose={handleBookCloseForm}
@@ -532,14 +650,21 @@ function App() {
           onImportSuccess={fetchBooks}
           setNotification={setNotification}
         />
+        <MemberBulkImportDialog
+          open={isMemberBulkImportOpen}
+          onClose={() => setIsMemberBulkImportOpen(false)}
+          onImportSuccess={fetchMembers}
+          setNotification={setNotification}
+        />
         <Notification
           open={notification.open}
           message={notification.message}
           severity={notification.severity}
           onClose={handleCloseNotification}
         />
+        <WelcomeWizard />
+        <FeatureTour />
       </BrowserRouter>
-    </ThemeProvider>
   );
 }
 

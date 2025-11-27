@@ -1,27 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  Button,
-  Box,
-  IconButton,
-  Avatar,
-  Typography,
-  Autocomplete,
-  Chip,
-} from '@mui/material';
-import PhotoCamera from '@mui/icons-material/PhotoCamera';
+import { useState, useEffect } from 'react';
+import { config } from '../config';
+import { Upload, Search, X, Image as ImageIcon } from 'lucide-react';
 import { useAuth } from './AuthContext';
+import { Modal, Button, Input, MultiSelect, type MultiSelectOption } from './ui';
 
 interface Category {
   id: number;
   name: string;
 }
 
-// Define the book type (can be shared in a types file later)
 interface Book {
   id?: number;
   title: string;
@@ -29,32 +16,33 @@ interface Book {
   isbn: string;
   available?: boolean;
   cover_image_path?: string;
-  categories?: Category[]; // Add categories
+  categories?: Category[];
 }
 
 interface BookFormProps {
   open: boolean;
   onClose: () => void;
-  onSubmit: (book: Book) => Promise<Book>; // onSubmit should now return a Book
+  onSubmit: (book: Book) => Promise<Book>;
   bookToEdit?: Book | null;
 }
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
-const BookForm: React.FC<BookFormProps> = ({ open, onClose, onSubmit, bookToEdit }) => {
+const BookForm = ({ open, onClose, onSubmit, bookToEdit }: BookFormProps) => {
   const [book, setBook] = useState<Book>({ title: '', author: '', isbn: '' });
   const [lookupIsbn, setLookupIsbn] = useState('');
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
   const [allCategories, setAllCategories] = useState<Category[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<Category[]>([]);
+  const [lookupLoading, setLookupLoading] = useState(false);
+  const [submitLoading, setSubmitLoading] = useState(false);
   const { token } = useAuth();
 
   useEffect(() => {
     if (bookToEdit) {
       setBook(bookToEdit);
       setLookupIsbn(bookToEdit.isbn);
-      setCoverPreview(bookToEdit.cover_image_path ? `${API_URL.replace('/api', '')}${bookToEdit.cover_image_path}` : null);
+      setCoverPreview(bookToEdit.cover_image_path ? `${config.apiUrl.replace('/api', '')}${bookToEdit.cover_image_path}` : null);
       setSelectedCategories(bookToEdit.categories || []);
     } else {
       setBook({ title: '', author: '', isbn: '' });
@@ -62,13 +50,16 @@ const BookForm: React.FC<BookFormProps> = ({ open, onClose, onSubmit, bookToEdit
       setCoverPreview(null);
       setSelectedCategories([]);
     }
-    setCoverFile(null); // Reset file input
+    setCoverFile(null);
     fetchAllCategories();
   }, [bookToEdit, open, token]);
 
   const handleLookup = async () => {
+    if (!lookupIsbn) return;
+
+    setLookupLoading(true);
     try {
-      const response = await fetch(`${API_URL}/books/lookup`, {
+      const response = await fetch(`${config.apiUrl}/books/lookup`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -84,17 +75,19 @@ const BookForm: React.FC<BookFormProps> = ({ open, onClose, onSubmit, bookToEdit
         ...prev,
         title: data.title || '',
         author: data.author || '',
-        isbn: lookupIsbn, // Set the isbn to what was looked up
+        isbn: lookupIsbn,
       }));
       setCoverPreview(data.coverUrl || null);
     } catch (error) {
       console.error('Error during ISBN lookup:', error);
+    } finally {
+      setLookupLoading(false);
     }
   };
 
   const fetchAllCategories = async () => {
     try {
-      const response = await fetch(`${API_URL}/categories`);
+      const response = await fetch(`${config.apiUrl}/categories`);
       if (!response.ok) {
         throw new Error('Failed to fetch categories');
       }
@@ -117,35 +110,34 @@ const BookForm: React.FC<BookFormProps> = ({ open, onClose, onSubmit, bookToEdit
       setCoverPreview(URL.createObjectURL(file));
     } else {
       setCoverFile(null);
-      setCoverPreview(bookToEdit?.cover_image_path ? `${API_URL}${bookToEdit.cover_image_path}` : null);
+      setCoverPreview(bookToEdit?.cover_image_path ? `${config.apiUrl}${bookToEdit.cover_image_path}` : null);
     }
   };
 
   const handleRemoveCover = () => {
     setCoverFile(null);
     setCoverPreview(null);
-    setBook((prevBook) => ({ ...prevBook, cover_image_path: undefined })); // Indicate removal
+    setBook((prevBook) => ({ ...prevBook, cover_image_path: undefined }));
   };
 
   const handleCombinedSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmitLoading(true);
+
     try {
       const bookDataWithCategories = {
         ...book,
         categoryIds: selectedCategories.map(cat => cat.id),
       };
 
-      // Submit book metadata first
-      const submittedBook = await onSubmit(bookDataWithCategories); // onSubmit should return the created/updated book with ID
+      const submittedBook = await onSubmit(bookDataWithCategories);
 
-      // If a new cover file is selected or existing cover is removed
       if (submittedBook && submittedBook.id && (coverFile || book.cover_image_path === undefined)) {
         if (coverFile) {
-          // Upload new cover
           const formData = new FormData();
           formData.append('cover', coverFile);
 
-          const response = await fetch(`${API_URL}/books/${submittedBook.id}/cover`, {
+          const response = await fetch(`${config.apiUrl}/books/${submittedBook.id}/cover`, {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${token}`,
@@ -158,8 +150,7 @@ const BookForm: React.FC<BookFormProps> = ({ open, onClose, onSubmit, bookToEdit
             throw new Error(errorData.error || 'Failed to upload cover image');
           }
         } else if (book.cover_image_path === undefined && bookToEdit?.cover_image_path) {
-          // Remove existing cover if user cleared it by setting cover_image_path to null
-          const response = await fetch(`${API_URL}/books/${submittedBook.id}`, {
+          const response = await fetch(`${config.apiUrl}/books/${submittedBook.id}`, {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json',
@@ -177,134 +168,163 @@ const BookForm: React.FC<BookFormProps> = ({ open, onClose, onSubmit, bookToEdit
       onClose();
     } catch (error: any) {
       console.error('Combined submit error:', error);
-      // Re-throw or handle error appropriately in App.tsx
       throw error;
+    } finally {
+      setSubmitLoading(false);
     }
   };
 
   return (
-    <Dialog open={open} onClose={onClose}>
-      <DialogTitle>{bookToEdit ? 'Edit Book' : 'Add New Book'}</DialogTitle>
-      <form onSubmit={handleCombinedSubmit}>
-        <DialogContent>
-          <Box sx={{ p: 2 }}>
-            <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', mb: 2 }}>
-              <TextField
-                margin="dense"
-                name="lookup-isbn"
-                label="Lookup by ISBN/UPC"
-                type="text"
-                fullWidth
-                variant="outlined"
-                value={lookupIsbn}
-                onChange={(e) => setLookupIsbn(e.target.value)}
-              />
-              <Button onClick={handleLookup} variant="outlined" sx={{ height: '56px' }}>Lookup</Button>
-            </Box>
-            <TextField
-              autoFocus
-              margin="dense"
-              name="title"
-              label="Title"
-              type="text"
+    <Modal
+      open={open}
+      onClose={onClose}
+      title={bookToEdit ? 'Edit Book' : 'Add New Book'}
+      size="md"
+    >
+      <form onSubmit={handleCombinedSubmit} className="space-y-6">
+        {/* ISBN Lookup */}
+        <div className="flex gap-2">
+          <div className="flex-1">
+            <Input
+              label="Lookup by ISBN/UPC"
+              value={lookupIsbn}
+              onChange={(e) => setLookupIsbn(e.target.value)}
+              placeholder="Enter ISBN to lookup book details"
               fullWidth
-              variant="outlined"
-              value={book.title}
-              onChange={handleChange}
-              required
             />
-            <TextField
-              margin="dense"
-              name="author"
-              label="Author"
-              type="text"
-              fullWidth
-              variant="outlined"
-              value={book.author}
-              onChange={handleChange}
-              required
-            />
-            <TextField
-              margin="dense"
-              name="isbn"
-              label="ISBN"
-              type="text"
-              fullWidth
-              variant="outlined"
-              value={book.isbn}
-              onChange={handleChange}
-            />
-            <Autocomplete
-              multiple
-              id="categories-autocomplete"
-              options={allCategories}
-              getOptionLabel={(option) => option.name}
-              value={selectedCategories}
-              onChange={(_event, newValue) => {
-                setSelectedCategories(newValue);
-              }}
-              renderTags={(value, getTagProps) =>
-                value.map((option, index) => (
-                  <Chip variant="outlined" label={option.name} {...getTagProps({ index })} />
-                ))
-              }
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  variant="outlined"
-                  label="Categories"
-                  placeholder="Select categories"
-                  margin="dense"
-                  fullWidth
-                />
-              )}
-              sx={{ mt: 1 }}
-            />
-            <Box sx={{ mt: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
+          </div>
+          <div className="flex items-end">
+            <Button
+              type="button"
+              onClick={handleLookup}
+              variant="outline"
+              loading={lookupLoading}
+              icon={<Search className="h-5 w-5" />}
+            >
+              Lookup
+            </Button>
+          </div>
+        </div>
+
+        {/* Book Details */}
+        <Input
+          label="Title"
+          name="title"
+          value={book.title}
+          onChange={handleChange}
+          required
+          fullWidth
+          autoFocus
+        />
+
+        <Input
+          label="Author"
+          name="author"
+          value={book.author}
+          onChange={handleChange}
+          required
+          fullWidth
+        />
+
+        <Input
+          label="ISBN"
+          name="isbn"
+          value={book.isbn}
+          onChange={handleChange}
+          fullWidth
+        />
+
+        {/* Categories */}
+        <MultiSelect
+          label="Categories"
+          options={allCategories as MultiSelectOption[]}
+          value={selectedCategories as MultiSelectOption[]}
+          onChange={setSelectedCategories}
+          placeholder="Select categories"
+          fullWidth
+        />
+
+        {/* Cover Image */}
+        <div>
+          <label className="block text-sm font-medium text-text-primary mb-2">
+            Book Cover
+          </label>
+          <div className="flex items-start gap-4">
+            {/* Preview */}
+            <div className="w-24 h-32 border-2 border-dashed border-border rounded-lg overflow-hidden flex items-center justify-center bg-background-secondary">
               {coverPreview ? (
-                <Avatar src={coverPreview} variant="square" sx={{ width: 80, height: 80 }} />
+                <img
+                  src={coverPreview}
+                  alt="Book cover preview"
+                  className="w-full h-full object-cover"
+                />
               ) : (
-                <Avatar variant="square" sx={{ width: 80, height: 80 }}>
-                  <PhotoCamera />
-                </Avatar>
+                <ImageIcon className="h-8 w-8 text-text-tertiary" />
               )}
-              <Box>
-                <Typography variant="subtitle2">Book Cover</Typography>
-                <label htmlFor="cover-upload">
-                  <input
-                    accept="image/*"
-                    id="cover-upload"
-                    type="file"
-                    style={{ display: 'none' }}
-                    onChange={handleFileChange}
-                  />
-                  <IconButton color="primary" component="span">
-                    <PhotoCamera />
-                  </IconButton>
-                  <Button variant="outlined" component="span">
-                    {coverFile ? 'Change Cover' : 'Upload Cover'}
-                  </Button>
-                </label>
-                {coverPreview && (
-                  <Button
-                    color="error"
-                    size="small"
-                    onClick={handleRemoveCover}
-                    sx={{ ml: 1 }}
-                  >
-                    Remove
-                  </Button>
-                )}
-              </Box>
-            </Box>
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={onClose}>Cancel</Button>
-          <Button type="submit">{bookToEdit ? 'Save Changes' : 'Add Book'}</Button>
-        </DialogActions>
+            </div>
+
+            {/* Upload Controls */}
+            <div className="flex-1 space-y-2">
+              <label htmlFor="cover-upload" className="block">
+                <input
+                  accept="image/*"
+                  id="cover-upload"
+                  type="file"
+                  className="hidden"
+                  onChange={handleFileChange}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  icon={<Upload className="h-4 w-4" />}
+                  className="cursor-pointer"
+                  onClick={() => document.getElementById('cover-upload')?.click()}
+                >
+                  {coverFile ? 'Change Cover' : 'Upload Cover'}
+                </Button>
+              </label>
+
+              {coverPreview && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleRemoveCover}
+                  icon={<X className="h-4 w-4" />}
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                >
+                  Remove Cover
+                </Button>
+              )}
+
+              <p className="text-xs text-text-secondary">
+                Recommended: 300x400px, max 5MB
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Actions */}
+        <div className="flex justify-end gap-3 pt-4 border-t border-border">
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={onClose}
+            disabled={submitLoading}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            variant="primary"
+            loading={submitLoading}
+          >
+            {bookToEdit ? 'Save Changes' : 'Add Book'}
+          </Button>
+        </div>
       </form>
-    </Dialog>
+    </Modal>
   );
 };
 

@@ -1,15 +1,8 @@
-import React, { useState } from 'react';
-import {
-  Box,
-  Typography,
-  Button,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-} from '@mui/material';
+import { useState } from 'react';
+import { config } from '../config';
+import { BookPlus, BookCheck } from 'lucide-react';
+import { Card, Button, Select } from './ui';
 
-// Define types for Book and Member
 interface Book {
   id: number;
   title: string;
@@ -35,9 +28,8 @@ interface LoanManagerProps {
   }) => void;
 }
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
-const LoanManager: React.FC<LoanManagerProps> = ({ books, members, onLoanChange, setNotification }) => {
+const LoanManager = ({ books, members, onLoanChange, setNotification }: LoanManagerProps) => {
   const [selectedBookToBorrow, setSelectedBookToBorrow] = useState<number | ''>('');
   const [selectedMember, setSelectedMember] = useState<number | ''>('');
   const [selectedBookToReturn, setSelectedBookToReturn] = useState<number | ''>('');
@@ -52,7 +44,7 @@ const LoanManager: React.FC<LoanManagerProps> = ({ books, members, onLoanChange,
     }
 
     try {
-      const response = await fetch(`${API_URL}/loans/borrow`, {
+      const response = await fetch(`${config.apiUrl}/loans/borrow`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ book_id: selectedBookToBorrow, member_id: selectedMember }),
@@ -66,7 +58,7 @@ const LoanManager: React.FC<LoanManagerProps> = ({ books, members, onLoanChange,
       setNotification({ open: true, message: 'Book borrowed successfully!', severity: 'success' });
       setSelectedBookToBorrow('');
       setSelectedMember('');
-      onLoanChange(); // Refresh data in the parent component
+      onLoanChange();
     } catch (err: any) {
       setNotification({ open: true, message: err.message, severity: 'error' });
     }
@@ -79,7 +71,7 @@ const LoanManager: React.FC<LoanManagerProps> = ({ books, members, onLoanChange,
     }
 
     try {
-      const response = await fetch(`${API_URL}/loans/return`, {
+      const response = await fetch(`${config.apiUrl}/loans/return`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ book_id: selectedBookToReturn }),
@@ -92,63 +84,105 @@ const LoanManager: React.FC<LoanManagerProps> = ({ books, members, onLoanChange,
 
       setNotification({ open: true, message: 'Book returned successfully!', severity: 'success' });
       setSelectedBookToReturn('');
-      onLoanChange(); // Refresh data in the parent component
+      onLoanChange();
     } catch (err: any) {
       setNotification({ open: true, message: err.message, severity: 'error' });
     }
   };
 
-  return (
-    <Box sx={{ mt: 4 }}>
-      <Typography variant="h5" gutterBottom>Borrow Book</Typography>
-      <Box component="form" sx={{ display: 'flex', gap: 2, mb: 4, alignItems: 'center' }}>
-        <FormControl fullWidth>
-          <InputLabel id="book-borrow-label">Book</InputLabel>
-          <Select
-            labelId="book-borrow-label"
-            value={selectedBookToBorrow}
-            label="Book"
-            onChange={(e) => setSelectedBookToBorrow(e.target.value as number)}
-          >
-            {availableBooks.map((book) => (
-              <MenuItem key={book.id} value={book.id}>{book.title} by {book.author}</MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-        <FormControl fullWidth>
-          <InputLabel id="member-borrow-label">Member</InputLabel>
-          <Select
-            labelId="member-borrow-label"
-            value={selectedMember}
-            label="Member"
-            onChange={(e) => setSelectedMember(e.target.value as number)}
-          >
-            {members.map((member) => (
-              <MenuItem key={member.id} value={member.id}>{member.name} ({member.email})</MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-        <Button variant="contained" onClick={handleBorrow} sx={{ padding: '15px 24px' }}>Borrow</Button>
-      </Box>
+  // Prepare options for Select components
+  const bookBorrowOptions = [
+    { value: '', label: 'Select a book' },
+    ...availableBooks.map(book => ({
+      value: book.id,
+      label: `${book.title} by ${book.author}`
+    }))
+  ];
 
-      <Typography variant="h5" gutterBottom>Return Book</Typography>
-      <Box component="form" sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-        <FormControl fullWidth>
-          <InputLabel id="book-return-label">Book</InputLabel>
-          <Select
-            labelId="book-return-label"
-            value={selectedBookToReturn}
-            label="Book"
-            onChange={(e) => setSelectedBookToReturn(e.target.value as number)}
+  const memberOptions = [
+    { value: '', label: 'Select a member' },
+    ...members.map(member => ({
+      value: member.id,
+      label: `${member.name} (${member.email})`
+    }))
+  ];
+
+  const bookReturnOptions = [
+    { value: '', label: 'Select a book' },
+    ...borrowedBooks.map(book => ({
+      value: book.id,
+      label: `${book.title} by ${book.author}`
+    }))
+  ];
+
+  return (
+    <div className="space-y-6 mt-6">
+      {/* Borrow Book Section */}
+      <Card>
+        <div className="flex items-center gap-2 mb-4">
+          <BookPlus className="h-6 w-6 text-primary" />
+          <h2 className="text-xl font-semibold text-text-primary">Borrow Book</h2>
+        </div>
+
+        <div className="flex flex-col sm:flex-row gap-4 items-end">
+          <div className="flex-1 w-full">
+            <Select
+              label="Book"
+              value={selectedBookToBorrow}
+              onChange={(e) => setSelectedBookToBorrow(Number(e.target.value) || '')}
+              options={bookBorrowOptions}
+              fullWidth
+            />
+          </div>
+
+          <div className="flex-1 w-full">
+            <Select
+              label="Member"
+              value={selectedMember}
+              onChange={(e) => setSelectedMember(Number(e.target.value) || '')}
+              options={memberOptions}
+              fullWidth
+            />
+          </div>
+
+          <Button
+            variant="primary"
+            onClick={handleBorrow}
+            className="w-full sm:w-auto"
           >
-            {borrowedBooks.map((book) => (
-              <MenuItem key={book.id} value={book.id}>{book.title} by {book.author}</MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-        <Button variant="contained" color="secondary" onClick={handleReturn} sx={{ padding: '15px 24px' }}>Return</Button>
-      </Box>
-    </Box>
+            Borrow
+          </Button>
+        </div>
+      </Card>
+
+      {/* Return Book Section */}
+      <Card>
+        <div className="flex items-center gap-2 mb-4">
+          <BookCheck className="h-6 w-6 text-secondary" />
+          <h2 className="text-xl font-semibold text-text-primary">Return Book</h2>
+        </div>
+
+        <div className="flex flex-col sm:flex-row gap-4 items-end">
+          <div className="flex-1 w-full">
+            <Select
+              label="Book"
+              value={selectedBookToReturn}
+              onChange={(e) => setSelectedBookToReturn(Number(e.target.value) || '')}
+              options={bookReturnOptions}
+              fullWidth
+            />
+          </div>
+
+          <Button
+            variant="secondary"
+            onClick={handleReturn}
+            className="w-full sm:w-auto"
+          >
+            Return
+          </Button>
+        </div>
+      </Card>
+    </div>
   );
 };
 
