@@ -1,8 +1,13 @@
+|-- .claude
+    |-- settings.local.json
 |-- .dockerignore
+|-- .editorconfig
 |-- .gitignore
+|-- claude.md
 |-- client
     |-- .dockerignore
     |-- .env
+    |-- .env.example
     |-- .gitignore
     |-- Containerfile
     |-- eslint.config.js
@@ -22,41 +27,86 @@
             |-- AuthContext.tsx
             |-- BookForm.tsx
             |-- BookList.tsx
+            |-- BookListSkeleton.tsx
             |-- BulkImportDialog.tsx
             |-- CategoryManagement.tsx
             |-- Dashboard.tsx
+            |-- DataExport.tsx
+            |-- FeatureTour.tsx
+            |-- ForgotPassword.tsx
             |-- LoanHistory.tsx
             |-- LoanManager.tsx
             |-- Login.tsx
+            |-- MemberBulkImportDialog.tsx
             |-- MemberForm.tsx
             |-- MemberList.tsx
+            |-- MemberListSkeleton.tsx
             |-- Navbar.tsx
             |-- Notification.tsx
+            |-- OnboardingContext.tsx
+            |-- Pagination.tsx
+            |-- ResetPassword.tsx
+            |-- Settings.tsx
             |-- Setup.tsx
+            |-- ui
+                |-- Badge.tsx
+                |-- Button.tsx
+                |-- Card.tsx
+                |-- EmptyState.tsx
+                |-- ErrorMessage.tsx
+                |-- index.ts
+                |-- Input.tsx
+                |-- Modal.tsx
+                |-- MultiSelect.tsx
+                |-- Select.tsx
+                |-- Skeleton.tsx
             |-- UserManagement.tsx
+            |-- WelcomeWizard.tsx
+        |-- config.ts
         |-- index.css
         |-- main.tsx
-        |-- theme.ts
+        |-- utils
+            |-- validation.ts
     |-- tsconfig.app.json
     |-- tsconfig.json
     |-- tsconfig.node.json
     |-- vite.config.ts
+|-- compose.dev.yml
 |-- compose.prod.yml
 |-- compose.yml
 |-- docs
+    |-- advanced_setup.md
     |-- app_plan.md
     |-- app_status.md
+    |-- customization_guide.md
+    |-- deployment_options.md
     |-- improvement_plan.md
+    |-- issues_and_gaps.md
+    |-- phase_5_implementation_plan.md
+    |-- platform_compatibility_analysis.md
+    |-- testing_guide.md
+    |-- troubleshooting_platforms.md
+    |-- typescript_migration_plan.md
+    |-- ui_modernization_plan.md
 |-- GEMINI.md
+|-- LICENSE
+|-- Makefile
+|-- README.md
 |-- server
     |-- .dockerignore
     |-- .env
+    |-- .env.example
     |-- .gitignore
     |-- authUtils.js
     |-- backup.sh
     |-- Containerfile
+    |-- controllers
     |-- db.js
     |-- index.js
+    |-- index.js.backup
+    |-- middleware
+        |-- errorHandler.js
+        |-- validation.js
     |-- migrations
         |-- 20251120093500_create_books_table.js
         |-- 20251120093501_create_members_table.js
@@ -64,10 +114,27 @@
         |-- 20251120093803_create_users_table.js
         |-- 20251120100000_add_cover_image_path_to_books.js
         |-- 20251120100500_create_categories_and_book_categories_table.js
+        |-- 20251126130000_add_password_reset_to_users.js
     |-- package.json
     |-- pnpm-lock.yaml
+    |-- README.md
+    |-- routes
+        |-- auth.js
+        |-- books.js
+        |-- categories.js
+        |-- dashboard.js
+        |-- export.js
+        |-- loans.js
+        |-- members.js
+        |-- system.js
+        |-- users.js
     |-- start.sh
     |-- uploads
+    |-- utils
+        |-- upload.js
+    |-- __tests__
+        |-- auth.test.js
+        |-- README.md
 |-- traefik
     |-- acme.json
     |-- certs
