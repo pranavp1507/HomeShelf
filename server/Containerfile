@@ -13,11 +13,18 @@ COPY package*.json pnpm-lock.yaml ./
 # Install dependencies
 RUN pnpm install --frozen-lockfile
 
-# Copy the rest of the application
-COPY . .
+# Copy source files and TypeScript config
+COPY src ./src
+COPY tsconfig.json ./
+COPY *.js ./
+COPY *.sh ./
+COPY migrations ./migrations
+
+# Build TypeScript code
+RUN pnpm run build
 
 # Expose backend port
 EXPOSE 3001
 
-# Start backend
-CMD ["pnpm", "start"]
+# Start backend (using start.sh which runs migrations first)
+CMD ["./start.sh"]

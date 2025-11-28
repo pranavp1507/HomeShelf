@@ -10,4 +10,4 @@ pnpm run migrate
 echo "Waiting for database to be ready..."
 sleep 10
 echo "Starting the server..."
-exec node index.js
+exec node dist/index.js

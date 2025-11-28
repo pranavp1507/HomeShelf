@@ -1,6 +1,10 @@
 # dependencies
 /node_modules
 
+# TypeScript build artifacts
+/dist
+*.tsbuildinfo
+
 # misc
 .DS_Store
 .env

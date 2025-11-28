@@ -2,13 +2,16 @@
   "name": "server",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
+    "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
     "test": "NODE_ENV=test jest --detectOpenHandles",
     "test:watch": "NODE_ENV=test jest --watch",
     "test:coverage": "NODE_ENV=test jest --coverage",
-    "start": "node index.js",
-    "migrate": "sleep 10; node-pg-migrate up"
+    "migrate": "sleep 10; node-pg-migrate up",
+    "type-check": "tsc --noEmit"
   },
   "keywords": [],
   "author": "",
@@ -29,8 +32,19 @@
     "uuid": "^13.0.0"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^3.0.0",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.5",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/multer": "^2.0.0",
+    "@types/node": "^24.10.1",
+    "@types/node-cron": "^3.0.11",
+    "@types/pg": "^8.15.6",
     "jest": "^29.7.0",
-    "supertest": "^7.1.4"
+    "supertest": "^7.1.4",
+    "ts-node": "^10.9.2",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.9.3"
   },
   "jest": {
     "testEnvironment": "node",
