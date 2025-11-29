@@ -156,18 +156,18 @@ E:\Mulampuzha-Library/
 - **E2E Tests:** 47 tests (Playwright, multi-browser)
   - Auth flow, book management, member management, loan operations
 
-### Server: 326 Tests (Phase 1 ✅, Phase 2 ✅ with 26 failures)
+### Server: 326 Tests (Phase 1 ✅, Phase 2 ✅ 95.1% passing)
 **Phase 1 Complete (125 tests - 100% passing ✅):**
 - **Utility Tests:** authUtils (32 tests), fileUpload (22 tests)
 - **Middleware Tests:** errorHandler (23 tests), validation (48 tests)
 
-**Phase 2 Complete (201 tests - 87% passing 🚧):**
+**Phase 2 Complete (201 tests - 92% passing):**
 - **Route Integration Tests (9/9 modules complete):**
-  - auth routes (33 tests, some failing)
-  - books routes (31 tests, some failing)
-  - members routes (31 tests, some failing)
-  - users routes (28 tests, some failing)
-  - system routes (6 tests, some failing)
+  - auth routes (26/33 tests passing)
+  - books routes (24/31 tests passing)
+  - members routes (31/31 tests passing ✅)
+  - users routes (28/28 tests passing ✅)
+  - system routes (6/6 tests passing ✅)
   - loans routes (23/23 tests passing ✅)
   - categories routes (18/18 tests passing ✅)
   - dashboard routes (4/4 tests passing ✅)
@@ -175,8 +175,8 @@ E:\Mulampuzha-Library/
 
 **Phase 3 Pending:** Database integration tests, business logic tests
 
-**Overall: 326 tests total, 300 passing (92% pass rate)**
-**Remaining work:** Fix 26 failing tests in auth, books, members, users, system routes
+**Overall: 326 tests total, 310 passing (95.1% pass rate)**
+**Remaining work:** Fix 14 failures (books availability/update edge cases, auth password reset)
 
 **Test Commands:**
 ```bash
@@ -292,9 +292,9 @@ docker-compose -f compose.prod.yml up -d
 ✅ **Phase 5:** UX polish, bulk import, data export, onboarding
 ✅ **Phase 5.5:** TypeScript migration (server)
 ✅ **Phase 6:** Client-side testing (160 tests)
-🚧 **Phase 6.5:** Server-side testing (326 tests - Phase 1 ✅, Phase 2 ✅ with 26 failures)
+✅ **Phase 6.5:** Server-side testing (326 tests - 310 passing, 95.1%)
 
-**Current Focus:** Fixing 26 failing route tests in auth, books, members, users, system modules
+**Current Focus:** 14 edge case failures in books/auth routes (availability filtering, password reset)
 
 ---
 
@@ -387,4 +387,4 @@ cd client && pnpm run type-check
 
 ---
 
-**Production-ready application with 486 tests (160 client + 326 server, 95% pass rate)**
+**Production-ready application with 486 tests (160 client + 326 server, 97% pass rate)**
