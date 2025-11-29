@@ -156,13 +156,26 @@ E:\Mulampuzha-Library/
 - **E2E Tests:** 47 tests (Playwright, multi-browser)
   - Auth flow, book management, member management, loan operations
 
-### Server: 125 Tests (Phase 1 ✅, Phase 2-3 Pending)
-**Phase 1 Complete (125 tests):**
+### Server: 271 Tests (Phase 1 ✅, Phase 2 🚧 93% Complete)
+**Phase 1 Complete (125 tests - 100% passing):**
 - **Utility Tests:** authUtils (32 tests), fileUpload (22 tests)
 - **Middleware Tests:** errorHandler (23 tests), validation (48 tests)
 
-**Phase 2 Pending:** Route integration tests for all 9 API modules
+**Phase 2 Mostly Complete (146 tests - 86% passing):**
+- **Route Integration Tests (7/9 modules complete):**
+  - auth routes (26/33 tests passing)
+  - books routes (22/31 tests passing)
+  - members routes (28/31 tests passing)
+  - loans routes (23/23 tests passing ✅)
+  - categories routes (18/18 tests passing ✅)
+  - dashboard routes (4/4 tests passing ✅)
+  - system routes (5/6 tests passing)
+  - users routes (pending)
+  - export routes (pending)
+
 **Phase 3 Pending:** Database integration tests, business logic tests
+
+**Overall: 271 tests total, 251 passing (93% pass rate)**
 
 **Test Commands:**
 ```bash
@@ -278,9 +291,9 @@ docker-compose -f compose.prod.yml up -d
 ✅ **Phase 5:** UX polish, bulk import, data export, onboarding
 ✅ **Phase 5.5:** TypeScript migration (server)
 ✅ **Phase 6:** Client-side testing (160 tests)
-🚧 **Phase 6.5:** Server-side testing (125/target tests - Phase 1 complete)
+🚧 **Phase 6.5:** Server-side testing (271 tests - Phase 1 complete, Phase 2 mostly complete)
 
-**Current Focus:** Server-side testing (Phase 2: Route integration tests)
+**Current Focus:** Server-side testing refinement and completion (fixing 20 failing tests, adding users/export route tests)
 
 ---
 
@@ -373,4 +386,4 @@ cd client && pnpm run type-check
 
 ---
 
-**Production-ready application with 285 tests (160 client + 125 server)**
+**Production-ready application with 431 tests (160 client + 271 server, 93% pass rate)**
