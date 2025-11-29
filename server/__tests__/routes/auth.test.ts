@@ -66,15 +66,18 @@ describe('Authentication Routes', () => {
       // For parameterized queries, we need to replace $1, $2, etc. with actual values
       let queryText = text;
       if (params && params.length > 0) {
-        params.forEach((param, index) => {
-          const placeholder = `$${index + 1}`;
+        // Replace in reverse order to avoid issues with numbered placeholders
+        for (let i = params.length - 1; i >= 0; i--) {
+          const param = params[i];
+          const placeholder = `\\$${i + 1}(?!\\d)`; // Match $N not followed by another digit
           const value = param === null ? 'NULL' :
                        typeof param === 'string' ? `'${param.replace(/'/g, "''")}'` :
                        typeof param === 'number' ? String(param) :
                        param instanceof Date ? `'${param.toISOString()}'` :
                        `'${JSON.stringify(param)}'`;
-          queryText = queryText.replace(placeholder, value as string);
-        });
+          // Use regex to replace only the placeholder, not substrings in values
+          queryText = queryText.replace(new RegExp(placeholder, 'g'), value as string);
+        }
       }
       return db.query(queryText);
     };
