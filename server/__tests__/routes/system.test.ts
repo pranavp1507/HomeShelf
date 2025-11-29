@@ -99,7 +99,10 @@ describe('System Routes', () => {
         .set('Authorization', `Bearer ${adminToken}`)
         .expect(200);
 
-      expect(mockQuery).toHaveBeenCalledWith('SELECT 1');
+      // Check that query was called with SELECT 1 (params may be undefined)
+      const calls = mockQuery.mock.calls;
+      const hasSelectOne = calls.some((call: any) => call[0] === 'SELECT 1');
+      expect(hasSelectOne).toBe(true);
     });
 
     it('should handle database connection failure gracefully', async () => {
