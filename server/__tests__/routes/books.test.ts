@@ -114,8 +114,9 @@ describe('Books Routes', () => {
           );
         }
 
-        // Apply availability filter
-        if (text.includes('b.available')) {
+        // Apply availability filter - look for b.available in conditions (not in FILTER clause)
+        if (text.match(/WHERE.+b\.available\s*=/)) {
+          // Find the availability param (boolean value)
           const availableParam = params?.find(p => typeof p === 'boolean');
           if (availableParam !== undefined) {
             books = books.filter(b => b.available === availableParam);
@@ -123,7 +124,7 @@ describe('Books Routes', () => {
         }
 
         // Apply pagination
-        const limit = params?.[params.length - 2] || 10;
+        const limit = params?.[params.length - 2] || 25;
         const offset = params?.[params.length - 1] || 0;
         books = books.slice(offset, offset + limit);
 
@@ -148,7 +149,7 @@ describe('Books Routes', () => {
       // Handle UPDATE queries for books
       if (text.includes('UPDATE books')) {
         const idParam = params![params!.length - 1];
-        const book = testBooks.find(b => b.id === idParam);
+        const book = testBooks.find(b => b.id === parseInt(idParam));
         if (book) {
           return {
             rows: [{
@@ -208,7 +209,7 @@ describe('Books Routes', () => {
       expect(response.body.data).toHaveLength(3);
       expect(response.body.pagination).toMatchObject({
         page: 1,
-        limit: 10,
+        limit: 25,
         total: 3,
         totalPages: 1
       });
