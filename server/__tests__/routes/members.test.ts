@@ -78,6 +78,13 @@ describe('Members Routes', () => {
         return { rows: [{ count: '3' }] };
       }
 
+      // Handle SELECT by ID (more specific, check first!)
+      if (text.includes('SELECT * FROM members WHERE id')) {
+        const id = params![0];
+        const member = testMembers.find(m => m.id === parseInt(id));
+        return { rows: member ? [member] : [] };
+      }
+
       // Handle SELECT queries for members list
       if (text.includes('SELECT * FROM members')) {
         let members = [...testMembers];
@@ -98,13 +105,6 @@ describe('Members Routes', () => {
         members = members.slice(offset, offset + limit);
 
         return { rows: members };
-      }
-
-      // Handle SELECT by ID
-      if (text.includes('SELECT * FROM members WHERE id')) {
-        const id = params![0];
-        const member = testMembers.find(m => m.id === parseInt(id));
-        return { rows: member ? [member] : [] };
       }
 
       // Handle INSERT queries
@@ -350,7 +350,7 @@ describe('Members Routes', () => {
         })
         .expect(400);
 
-      expect(response.body.error).toContain('Email');
+      expect(response.body.error).toContain('email');
     });
 
     it('should reject invalid email format', async () => {
