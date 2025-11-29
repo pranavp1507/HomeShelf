@@ -156,15 +156,15 @@ E:\Mulampuzha-Library/
 - **E2E Tests:** 47 tests (Playwright, multi-browser)
   - Auth flow, book management, member management, loan operations
 
-### Server: 326 Tests (Phase 1 ✅, Phase 2 ✅ 96% passing)
+### Server: 326 Tests (Phase 1 ✅, Phase 2 ✅ 98.2% passing)
 **Phase 1 Complete (125 tests - 100% passing ✅):**
 - **Utility Tests:** authUtils (32 tests), fileUpload (22 tests)
 - **Middleware Tests:** errorHandler (23 tests), validation (48 tests)
 
-**Phase 2 Complete (201 tests - 93.5% passing):**
+**Phase 2 Complete (201 tests - 97% passing):**
 - **Route Integration Tests (9/9 modules complete):**
-  - auth routes (27/33 tests passing)
-  - books routes (24/31 tests passing)
+  - auth routes (33/33 tests passing ✅)
+  - books routes (26/31 tests passing)
   - members routes (31/31 tests passing ✅)
   - users routes (28/28 tests passing ✅)
   - system routes (6/6 tests passing ✅)
@@ -175,8 +175,8 @@ E:\Mulampuzha-Library/
 
 **Phase 3 Pending:** Database integration tests, business logic tests
 
-**Overall: 326 tests total, 313 passing (96% pass rate)**
-**Remaining work:** 13 failures (7 books availability/UPDATE, 6 auth password reset)
+**Overall: 326 tests total, 320 passing (98.2% pass rate)**
+**Remaining work:** 5 failures in books routes (UPDATE/DELETE edge cases, category associations)
 
 **Test Commands:**
 ```bash
@@ -387,4 +387,4 @@ cd client && pnpm run type-check
 
 ---
 
-**Production-ready application with 486 tests (160 client + 326 server, 97.3% pass rate)**
+**Production-ready application with 486 tests (160 client + 326 server, 98.8% pass rate)**
