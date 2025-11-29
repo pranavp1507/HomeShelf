@@ -326,10 +326,12 @@ describe('Users Routes', () => {
 
     it('should prevent deleting the last admin', async () => {
       // Mock only 1 admin
-      mockQuery.mockImplementation(async (text: string, params?: any[]) => {
+      mockQuery.mockImplementationOnce(async (text: string, params?: any[]) => {
         if (text.includes('SELECT role FROM users WHERE id')) {
           return { rows: [{ role: 'admin' }] };
         }
+        return { rows: [] };
+      }).mockImplementationOnce(async (text: string) => {
         if (text.includes("COUNT(*) FROM users WHERE role = 'admin'")) {
           return { rows: [{ count: '1' }] };
         }
@@ -352,10 +354,12 @@ describe('Users Routes', () => {
     });
 
     it('should return 404 for nonexistent user', async () => {
-      mockQuery.mockImplementation(async (text: string) => {
+      mockQuery.mockImplementationOnce(async (text: string) => {
         if (text.includes('SELECT role FROM users WHERE id')) {
           return { rows: [] };
         }
+        return { rows: [] };
+      }).mockImplementationOnce(async (text: string) => {
         if (text.includes('DELETE FROM users')) {
           return { rows: [], rowCount: 0 };
         }
