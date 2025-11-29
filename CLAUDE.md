@@ -156,26 +156,27 @@ E:\Mulampuzha-Library/
 - **E2E Tests:** 47 tests (Playwright, multi-browser)
   - Auth flow, book management, member management, loan operations
 
-### Server: 271 Tests (Phase 1 ✅, Phase 2 🚧 93% Complete)
-**Phase 1 Complete (125 tests - 100% passing):**
+### Server: 326 Tests (Phase 1 ✅, Phase 2 ✅ with 26 failures)
+**Phase 1 Complete (125 tests - 100% passing ✅):**
 - **Utility Tests:** authUtils (32 tests), fileUpload (22 tests)
 - **Middleware Tests:** errorHandler (23 tests), validation (48 tests)
 
-**Phase 2 Mostly Complete (146 tests - 86% passing):**
-- **Route Integration Tests (7/9 modules complete):**
-  - auth routes (26/33 tests passing)
-  - books routes (22/31 tests passing)
-  - members routes (28/31 tests passing)
+**Phase 2 Complete (201 tests - 87% passing 🚧):**
+- **Route Integration Tests (9/9 modules complete):**
+  - auth routes (33 tests, some failing)
+  - books routes (31 tests, some failing)
+  - members routes (31 tests, some failing)
+  - users routes (28 tests, some failing)
+  - system routes (6 tests, some failing)
   - loans routes (23/23 tests passing ✅)
   - categories routes (18/18 tests passing ✅)
   - dashboard routes (4/4 tests passing ✅)
-  - system routes (5/6 tests passing)
-  - users routes (pending)
-  - export routes (pending)
+  - export routes (27/27 tests passing ✅)
 
 **Phase 3 Pending:** Database integration tests, business logic tests
 
-**Overall: 271 tests total, 251 passing (93% pass rate)**
+**Overall: 326 tests total, 300 passing (92% pass rate)**
+**Remaining work:** Fix 26 failing tests in auth, books, members, users, system routes
 
 **Test Commands:**
 ```bash
@@ -291,9 +292,9 @@ docker-compose -f compose.prod.yml up -d
 ✅ **Phase 5:** UX polish, bulk import, data export, onboarding
 ✅ **Phase 5.5:** TypeScript migration (server)
 ✅ **Phase 6:** Client-side testing (160 tests)
-🚧 **Phase 6.5:** Server-side testing (271 tests - Phase 1 complete, Phase 2 mostly complete)
+🚧 **Phase 6.5:** Server-side testing (326 tests - Phase 1 ✅, Phase 2 ✅ with 26 failures)
 
-**Current Focus:** Server-side testing refinement and completion (fixing 20 failing tests, adding users/export route tests)
+**Current Focus:** Fixing 26 failing route tests in auth, books, members, users, system modules
 
 ---
 
@@ -386,4 +387,4 @@ cd client && pnpm run type-check
 
 ---
 
-**Production-ready application with 431 tests (160 client + 271 server, 93% pass rate)**
+**Production-ready application with 486 tests (160 client + 326 server, 95% pass rate)**
