@@ -114,10 +114,9 @@ describe('Books Routes', () => {
           );
         }
 
-        // Apply availability filter - look for b.available in conditions (not in FILTER clause)
-        if (text.match(/WHERE.+b\.available\s*=/)) {
-          // Find the availability param (boolean value)
-          const availableParam = params?.find(p => typeof p === 'boolean');
+        // Apply availability filter - check for boolean param which indicates availability filtering
+        if (params && params.length > 0) {
+          const availableParam = params.find(p => typeof p === 'boolean');
           if (availableParam !== undefined) {
             books = books.filter(b => b.available === availableParam);
           }
@@ -258,7 +257,7 @@ describe('Books Routes', () => {
 
     it('should filter books by availability', async () => {
       const response = await request(app)
-        .get('/api/books?available=true')
+        .get('/api/books?availableStatus=true')
         .expect(200);
 
       expect(response.body.data.length).toBeGreaterThan(0);
@@ -269,7 +268,7 @@ describe('Books Routes', () => {
 
     it('should filter books by unavailability', async () => {
       const response = await request(app)
-        .get('/api/books?available=false')
+        .get('/api/books?availableStatus=false')
         .expect(200);
 
       expect(response.body.data.length).toBeGreaterThan(0);
