@@ -3,7 +3,7 @@
 |-- .dockerignore
 |-- .editorconfig
 |-- .gitignore
-|-- claude.md
+|-- CLAUDE.md
 |-- client
     |-- .dockerignore
     |-- .env
@@ -60,17 +60,32 @@
                 |-- MultiSelect.tsx
                 |-- Select.tsx
                 |-- Skeleton.tsx
+                |-- __tests__
+                    |-- Badge.test.tsx
+                    |-- Button.test.tsx
+                    |-- Card.test.tsx
+                    |-- EmptyState.test.tsx
+                    |-- ErrorMessage.test.tsx
+                    |-- Input.test.tsx
+                    |-- Modal.test.tsx
+                    |-- MultiSelect.test.tsx
+                    |-- Select.test.tsx
+                    |-- Skeleton.test.tsx
             |-- UserManagement.tsx
             |-- WelcomeWizard.tsx
         |-- config.ts
         |-- index.css
         |-- main.tsx
+        |-- test
+            |-- setup.ts
+            |-- utils.tsx
         |-- utils
             |-- validation.ts
     |-- tsconfig.app.json
     |-- tsconfig.json
     |-- tsconfig.node.json
     |-- vite.config.ts
+    |-- vitest.config.ts
 |-- compose.dev.yml
 |-- compose.prod.yml
 |-- compose.yml
@@ -78,19 +93,29 @@
     |-- advanced_setup.md
     |-- app_plan.md
     |-- app_status.md
+    |-- code_review_report.md
     |-- customization_guide.md
     |-- deployment_options.md
     |-- improvement_plan.md
     |-- issues_and_gaps.md
     |-- phase_5_implementation_plan.md
     |-- platform_compatibility_analysis.md
+    |-- server_testing_plan.md
     |-- testing_guide.md
     |-- troubleshooting_platforms.md
     |-- typescript_migration_plan.md
     |-- ui_modernization_plan.md
+|-- e2e
+    |-- auth.spec.ts
+    |-- books.spec.ts
+    |-- loans.spec.ts
+    |-- members.spec.ts
+    |-- test-utils.ts
 |-- GEMINI.md
 |-- LICENSE
 |-- Makefile
+|-- package.json
+|-- playwright.config.ts
 |-- README.md
 |-- server
     |-- .dockerignore
@@ -104,6 +129,7 @@
     |-- db.js
     |-- index.js
     |-- index.js.backup
+    |-- jest.config.js
     |-- middleware
         |-- errorHandler.js
         |-- validation.js
@@ -128,13 +154,69 @@
         |-- members.js
         |-- system.js
         |-- users.js
+    |-- src
+        |-- config
+            |-- index.ts
+        |-- db.ts
+        |-- index.ts
+        |-- middleware
+            |-- errorHandler.ts
+            |-- validation.ts
+        |-- routes
+            |-- auth.ts
+            |-- books.ts
+            |-- categories.ts
+            |-- dashboard.ts
+            |-- export.ts
+            |-- loans.ts
+            |-- members.ts
+            |-- system.ts
+            |-- users.ts
+        |-- types
+            |-- book.ts
+            |-- category.ts
+            |-- express.ts
+            |-- index.ts
+            |-- loan.ts
+            |-- member.ts
+            |-- user.ts
+        |-- utils
+            |-- authUtils.ts
+            |-- fileUpload.ts
     |-- start.sh
+    |-- tsconfig.json
     |-- uploads
     |-- utils
         |-- upload.js
     |-- __tests__
         |-- auth.test.js
+        |-- fixtures
+            |-- books.ts
+            |-- categories.ts
+            |-- index.ts
+            |-- loans.ts
+            |-- members.ts
+            |-- users.ts
+        |-- helpers
+            |-- database.ts
+        |-- middleware
+            |-- errorHandler.test.ts
+            |-- validation.test.ts
         |-- README.md
+        |-- routes
+            |-- auth.test.ts
+            |-- books.test.ts
+            |-- categories.test.ts
+            |-- dashboard.test.ts
+            |-- export.test.ts
+            |-- loans.test.ts
+            |-- members.test.ts
+            |-- system.test.ts
+            |-- users.test.ts
+        |-- setup.ts
+        |-- utils
+            |-- authUtils.test.ts
+            |-- fileUpload.test.ts
 |-- traefik
     |-- acme.json
     |-- certs
