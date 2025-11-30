@@ -5,6 +5,8 @@
 
 import express, { Request, Response } from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 import path from 'path';
 import fs from 'fs';
 import { schedule } from 'node-cron';
@@ -47,8 +49,11 @@ const corsOptions: cors.CorsOptions = {
       callback(null, true);
     } else {
       console.warn(`CORS blocked origin: ${origin}`);
-      callback(null, true); // Allow anyway for development
-      // In production, use: callback(new Error('Not allowed by CORS'));
+      if (config.nodeEnv === 'production') {
+        callback(new Error('Not allowed by CORS'));
+      } else {
+        callback(null, true); // Allow in development for testing
+      }
     }
   },
   credentials: true,
@@ -56,10 +61,43 @@ const corsOptions: cors.CorsOptions = {
 };
 
 // ========================================
+// Security Middleware
+// ========================================
+// Helmet - Security headers
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'"],
+      imgSrc: ["'self'", "data:", "https:"],
+    },
+  },
+  crossOriginEmbedderPolicy: false, // Allow uploads
+}));
+
+// Rate limiting - Prevent brute force attacks
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // 5 requests per window
+  message: 'Too many attempts, please try again later',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // 100 requests per window
+  message: 'Too many requests, please try again later',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// ========================================
 // Middleware Setup
 // ========================================
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cors(corsOptions));
 
 // Serve static files from uploads directory
@@ -92,15 +130,18 @@ app.get('/', (req: Request, res: Response) => {
 });
 
 // API Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/books', booksRoutes);
-app.use('/api/members', membersRoutes);
-app.use('/api/loans', loansRoutes);
-app.use('/api/categories', categoriesRoutes);
-app.use('/api/users', usersRoutes);
-app.use('/api/dashboard', dashboardRoutes);
-app.use('/api/export', exportRoutes);
-app.use('/api/system', systemRoutes);
+// Apply strict rate limiting to authentication endpoints
+app.use('/api/auth', authLimiter, authRoutes);
+
+// Apply general rate limiting to other API endpoints
+app.use('/api/books', apiLimiter, booksRoutes);
+app.use('/api/members', apiLimiter, membersRoutes);
+app.use('/api/loans', apiLimiter, loansRoutes);
+app.use('/api/categories', apiLimiter, categoriesRoutes);
+app.use('/api/users', apiLimiter, usersRoutes);
+app.use('/api/dashboard', apiLimiter, dashboardRoutes);
+app.use('/api/export', apiLimiter, exportRoutes);
+app.use('/api/system', apiLimiter, systemRoutes);
 
 // ========================================
 // Error Handling

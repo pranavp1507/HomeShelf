@@ -3,7 +3,8 @@
     "allow": [
       "mcp__context7__get-library-docs",
       "Bash(pnpm run build:*)",
-      "Bash(pnpm test:*)"
+      "Bash(pnpm test:*)",
+      "Bash(pnpm add:*)"
     ],
     "deny": [],
     "ask": []

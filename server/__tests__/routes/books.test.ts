@@ -449,7 +449,8 @@ describe('Books Routes', () => {
         .put('/api/books/999')
         .set('Authorization', `Bearer ${adminToken}`)
         .send({
-          title: 'Updated Title'
+          title: 'Updated Title',
+          author: 'Updated Author'
         })
         .expect(404);
 
@@ -461,6 +462,7 @@ describe('Books Routes', () => {
         .put('/api/books/1')
         .set('Authorization', `Bearer ${adminToken}`)
         .send({
+          title: 'The Great Gatsby',
           author: 'Updated Author Only'
         })
         .expect(200);
@@ -473,7 +475,8 @@ describe('Books Routes', () => {
         .put('/api/books/1')
         .set('Authorization', `Bearer ${adminToken}`)
         .send({
-          title: '<img src=x onerror=alert(1)>Sanitized'
+          title: '<img src=x onerror=alert(1)>Sanitized',
+          author: 'F. Scott Fitzgerald'
         })
         .expect(200);
 
@@ -484,6 +487,14 @@ describe('Books Routes', () => {
 
   describe('DELETE /api/books/:id', () => {
     it('should delete a book', async () => {
+      // Ensure mock returns rowCount for DELETE operation
+      mockQuery.mockImplementationOnce((text: string) => {
+        if (text.includes('DELETE FROM books')) {
+          return Promise.resolve({ rows: [], rowCount: 1 });
+        }
+        return Promise.resolve({ rows: [] });
+      });
+
       const response = await request(app)
         .delete('/api/books/1')
         .set('Authorization', `Bearer ${adminToken}`)
@@ -554,6 +565,7 @@ describe('Books Routes', () => {
         .set('Authorization', `Bearer ${adminToken}`)
         .send({
           title: 'The Great Gatsby',
+          author: 'F. Scott Fitzgerald',
           categoryIds: [1]
         })
         .expect(200);

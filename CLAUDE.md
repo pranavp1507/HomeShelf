@@ -9,6 +9,7 @@
 ## Technology Stack
 
 ### Frontend
+
 - **React 19.2.0** + TypeScript, **Vite 7.2.2**
 - **Tailwind CSS v4.1.17** for styling, **Framer Motion v11.18.2** for animations
 - **Vitest 4.0.14** + **React Testing Library 16.3.0** (113 unit tests)
@@ -16,6 +17,7 @@
 - **pnpm 10.22.0** package manager
 
 ### Backend
+
 - **Node.js 24** + **TypeScript 5.9.3**
 - **Express.js 5.1.0**, **PostgreSQL 16**
 - **Jest 29.7.0** + **Supertest 7.1.4** (125 tests - Phase 1 complete)
@@ -24,6 +26,7 @@
 - **pnpm 10.22.0** package manager
 
 ### Infrastructure
+
 - **Docker/Podman** containers
 - **Traefik v3.6** reverse proxy with HTTPS
 - Persistent volumes for data, uploads, backups
@@ -32,7 +35,7 @@
 
 ## Project Structure (Simplified)
 
-```
+```text
 E:\Mulampuzha-Library/
 ├── client/                    # React Frontend (TypeScript)
 │   ├── src/
@@ -79,6 +82,7 @@ E:\Mulampuzha-Library/
 **Tables:** books, members, loans, users, categories, book_categories (junction)
 
 **Key Relationships:**
+
 - loans → books (FK, cascade delete)
 - loans → members (FK, cascade delete)
 - book_categories → books + categories (FK, cascade delete)
@@ -90,30 +94,39 @@ E:\Mulampuzha-Library/
 ## API Endpoints (9 Route Modules)
 
 ### Authentication (`/api/auth`)
+
 - Setup status, register, login, forgot password, reset password
 
 ### Books (`/api/books`)
+
 - CRUD, search/filter/sort, ISBN lookup (Google Books/Open Library), bulk CSV import, cover upload
 
 ### Members (`/api/members`)
+
 - CRUD, search, bulk CSV import
 
 ### Loans (`/api/loans`)
+
 - Borrow (14-day due date), return, history with filters
 
 ### Categories (`/api/categories`)
+
 - CRUD (admin-only)
 
 ### Users (`/api/users`)
+
 - CRUD, password reset (admin-only)
 
 ### Dashboard (`/api/dashboard`)
+
 - Statistics (total books, available, members, active loans, overdue)
 
 ### Export (`/api/export`)
+
 - CSV export for books, members, loans with filters (admin-only)
 
 ### System (`/api/system`)
+
 - System info and configuration status (admin-only)
 
 ---
@@ -121,24 +134,28 @@ E:\Mulampuzha-Library/
 ## Core Features
 
 **Library Management:**
+
 - Books: CRUD, search, filter by category/availability, ISBN lookup, cover images, bulk CSV import
 - Members: CRUD, search, bulk CSV import
 - Loans: Borrow/return, 14-day due dates, overdue tracking (cron job)
 - Categories: Multi-category organization
 
 **Authentication & Security:**
+
 - JWT authentication (1-hour expiry)
 - Role-based access (admin/member)
 - bcrypt password hashing
 - Input validation & XSS sanitization
 
 **Admin Features:**
+
 - User management, category management
 - Data export (CSV with date filters)
 - System settings & configuration viewer
 - Bulk import/export
 
 **UX & Design:**
+
 - Tailwind CSS v4 + Framer Motion animations
 - Dark/light theme (localStorage)
 - Responsive mobile-first design
@@ -151,17 +168,21 @@ E:\Mulampuzha-Library/
 ## Testing Coverage
 
 ### Client: 160 Tests ✅
+
 - **Unit Tests:** 113 tests (UI components)
   - Button, Card, Input, Select, Badge, Modal, MultiSelect, EmptyState, ErrorMessage, Skeleton
 - **E2E Tests:** 47 tests (Playwright, multi-browser)
   - Auth flow, book management, member management, loan operations
 
 ### Server: 326 Tests (Phase 1 ✅, Phase 2 ✅ 98.2% passing)
+
 **Phase 1 Complete (125 tests - 100% passing ✅):**
+
 - **Utility Tests:** authUtils (32 tests), fileUpload (22 tests)
 - **Middleware Tests:** errorHandler (23 tests), validation (48 tests)
 
 **Phase 2 Complete (201 tests - 98.2% passing):**
+
 - **Route Integration Tests (9/9 modules complete):**
   - auth routes (33/33 tests passing ✅)
   - books routes (26/31 tests passing - 5 validation mismatch failures)
@@ -179,6 +200,7 @@ E:\Mulampuzha-Library/
 **Known Issues:** 5 test failures in books routes (tests expect partial updates, route requires all fields)
 
 **Test Commands:**
+
 ```bash
 # Client
 cd client && pnpm test           # Run unit tests
@@ -207,6 +229,7 @@ docker-compose -f compose.dev.yml up
 ### Environment Variables
 
 **Server (.env):**
+
 - `DATABASE_URL` (required) - PostgreSQL connection
 - `JWT_SECRET` (required) - JWT signing key
 - `GOOGLE_BOOKS_API_KEY` (optional) - ISBN lookup
@@ -214,6 +237,7 @@ docker-compose -f compose.dev.yml up
 - `ENABLE_OVERDUE_CHECKS`, `OVERDUE_CHECK_INTERVAL` - Cron config
 
 **Client (.env):**
+
 - `VITE_API_URL` (required) - Backend API URL
 - `VITE_LIBRARY_NAME`, `VITE_LIBRARY_LOGO` (optional) - Branding
 
@@ -241,6 +265,7 @@ cd client && pnpm run dev       # http://localhost:3000
 ## Code Guidelines
 
 ### Backend (TypeScript)
+
 - **Routes:** Add endpoints in `server/src/routes/`, use `asyncHandler` for async routes
 - **Auth:** Use `authenticateToken` middleware, `checkAdmin` for admin-only
 - **Validation:** Use validation middleware from `server/src/middleware/validation.ts`
@@ -248,6 +273,7 @@ cd client && pnpm run dev       # http://localhost:3000
 - **Database:** Use transactions for multi-step operations
 
 ### Frontend (React + TypeScript)
+
 - **Components:** Functional components with hooks
 - **Styling:** Tailwind CSS utility classes
 - **UI:** Use components from `./ui` for consistency
@@ -257,6 +283,7 @@ cd client && pnpm run dev       # http://localhost:3000
 - **Loading:** Use `Skeleton` component for loading states
 
 ### Testing
+
 - **Server:** Jest + Supertest for unit/integration tests
 - **Client:** Vitest + React Testing Library for unit tests
 - **E2E:** Playwright for end-to-end tests
@@ -268,7 +295,7 @@ cd client && pnpm run dev       # http://localhost:3000
 **3 Docker Compose Configurations:**
 
 1. **`compose.dev.yml`** - Simple development (localhost:3000, localhost:3001)
-2. **`compose.yml`** - Local with Traefik HTTPS (https://local.test)
+2. **`compose.yml`** - Local with Traefik HTTPS (<https://local.test>)
 3. **`compose.prod.yml`** - Production with Let's Encrypt SSL
 
 ```bash
@@ -303,6 +330,7 @@ docker-compose -f compose.prod.yml up -d
 ## Common Tasks
 
 ### Run Tests
+
 ```bash
 # All tests (client + server)
 pnpm test:all
@@ -318,6 +346,7 @@ pnpm test:e2e
 ```
 
 ### Database Migrations
+
 ```bash
 cd server
 pnpm run migrate up              # Run pending migrations
@@ -326,12 +355,14 @@ pnpm run migrate create <name>  # Create new migration
 ```
 
 ### Add API Endpoint
+
 1. Create/edit route in `server/src/routes/`
 2. Add types in `server/src/types/`
 3. Use validation middleware
 4. Write tests in `server/__tests__/routes/`
 
 ### Add React Component
+
 1. Create in `client/src/components/`
 2. Use UI components from `./ui`
 3. Add route in `App.tsx` if needed
@@ -352,17 +383,21 @@ pnpm run migrate create <name>  # Create new migration
 ## Documentation
 
 **Planning & Architecture:**
+
 - `docs/app_plan.md` - Development roadmap
 - `docs/typescript_migration_plan.md` - TypeScript migration (complete)
 - `docs/server_testing_plan.md` - Server testing plan
 
 **Testing:**
+
 - `docs/testing_guide.md` - Comprehensive testing guide
 
 **Code Quality:**
+
 - `docs/code_review_report.md` - Comprehensive AI code review (Nov 30, 2025)
 
 **Deployment:**
+
 - `docs/deployment_options.md` - Deployment comparison
 - `docs/customization_guide.md` - Configuration guide
 
@@ -386,8 +421,9 @@ cd client && pnpm run type-check
 ```
 
 **Default Access:**
-- Frontend: http://localhost:3000
-- Backend API: http://localhost:3001/api
+
+- Frontend: <http://localhost:3000>
+- Backend API: <http://localhost:3001/api>
 - Create admin user on first launch
 
 ---
@@ -401,6 +437,7 @@ cd client && pnpm run type-check
 **Overall Score:** 7.75/10 - Production-ready with minor improvements
 
 **Security (7.5/10):**
+
 - ✅ Excellent SQL injection protection (parameterized queries)
 - ✅ Strong password security (bcrypt + SHA-256)
 - ❌ Missing rate limiting on auth endpoints (CRITICAL)
@@ -408,23 +445,27 @@ cd client && pnpm run type-check
 - ⚠️ Basic XSS sanitization needs enhancement
 
 **Performance (7/10):**
+
 - ✅ Proper transaction handling
 - ✅ N+1 query prevention with JSON aggregation
 - ❌ Missing database indexes (9 recommended - HIGH impact)
 - ⚠️ Default connection pool configuration
 
 **Architecture (8/10):**
+
 - ✅ Clean separation of concerns
 - ✅ TypeScript migration complete
 - ✅ Centralized error handling
 - ⚠️ Service layer recommended for business logic
 
 **Code Quality (8.5/10):**
+
 - ✅ 98.8% test pass rate (480/486)
 - ✅ Type checking passes
 - ❌ 5 failing tests in books routes (validation mismatch)
 
 **Priority Actions Before Production:**
+
 1. Implement rate limiting (prevent brute force)
 2. Fix CORS configuration (security)
 3. Add 9 database indexes (10-100x performance)
