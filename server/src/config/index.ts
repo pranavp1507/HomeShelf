@@ -23,6 +23,9 @@ export interface Config {
   // External APIs
   googleBooksApiKey?: string;
 
+  // Monitoring
+  sentryDsn?: string;
+
   // Email configuration
   emailNotificationsEnabled: boolean;
   smtpHost?: string;
@@ -57,6 +60,9 @@ const config: Config = {
 
   // External APIs
   googleBooksApiKey: process.env.GOOGLE_BOOKS_API_KEY,
+
+  // Monitoring
+  sentryDsn: process.env.SENTRY_DSN,
 
   // Email configuration
   emailNotificationsEnabled: process.env.ENABLE_EMAIL_NOTIFICATIONS === 'true',

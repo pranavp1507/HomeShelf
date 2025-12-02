@@ -29,6 +29,9 @@ importers:
       express-rate-limit:
         specifier: ^8.2.1
         version: 8.2.1(express@5.1.0)
+      express-request-id:
+        specifier: ^3.0.0
+        version: 3.0.0
       helmet:
         specifier: ^8.1.0
         version: 8.1.0
@@ -50,6 +53,9 @@ importers:
       uuid:
         specifier: ^9.0.1
         version: 9.0.1
+      xss:
+        specifier: ^1.0.15
+        version: 1.0.15
     devDependencies:
       '@faker-js/faker':
         specifier: ^10.1.0
@@ -852,6 +858,9 @@ packages:
     resolution: {integrity: sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA==}
     engines: {node: '>= 8'}
 
+  cssfilter@0.0.10:
+    resolution: {integrity: sha512-FAaLDaplstoRsDR8XGYH51znUN0UY7nMc6Z9/fvE8EXGwvJE9hu7W2vHwx1+bd6gCYnln9nLbzxFTrcO9YQDZw==}
+
   csv-parse@6.1.0:
     resolution: {integrity: sha512-CEE+jwpgLn+MmtCpVcPtiCZpVtB6Z2OKPTr34pycYYoL7sxdOkXDdQ4lRiw6ioC0q6BLqhc6cKweCVvral8yhw==}
 
@@ -1003,6 +1012,10 @@ packages:
     engines: {node: '>= 16'}
     peerDependencies:
       express: '>= 4.11'
+
+  express-request-id@3.0.0:
+    resolution: {integrity: sha512-1MNfaOzlsXfrkeV+LZQLK2fq5ufosZ5XUSIXqNv11iTbOsb5SAeuK7N0eHz8BTh8s4UyvTimsecBRRlzMRE7Ng==}
+    engines: {node: ^14.20.1 || >=16.0.0}
 
   express@5.1.0:
     resolution: {integrity: sha512-DT9ck5YIRU+8GYzzU5kT3eHGA5iL+1Zd0EutOmTE9Dtk+Tvuzd23VBU+ec7HPNSTxXYO55gPV/hq4pSBJDjFpA==}
@@ -2261,6 +2274,11 @@ packages:
     resolution: {integrity: sha512-7KxauUdBmSdWnmpaGFg+ppNjKF8uNLry8LyzjauQDOVONfFLNKrKvQOxZ/VuTIcS/gge/YNahf5RIIQWTSarlg==}
     engines: {node: ^12.13.0 || ^14.15.0 || >=16.0.0}
 
+  xss@1.0.15:
+    resolution: {integrity: sha512-FVdlVVC67WOIPvfOwhoMETV72f6GbW7aOabBC3WxN/oUdoEMDyLz4OgRv5/gck2ZeNqEQu+Tb0kloovXOfpYVg==}
+    engines: {node: '>= 0.10.0'}
+    hasBin: true
+
   xtend@4.0.2:
     resolution: {integrity: sha512-LKYU1iAXJXUgAXn9URjiu+MWhyUXHsvfp7mcuYm9dSUKK0/CjtrUwFAxD82/mCWbtLsGjFIad0wIsod4zrTAEQ==}
     engines: {node: '>=0.4'}
@@ -3214,6 +3232,8 @@ snapshots:
       shebang-command: 2.0.0
       which: 2.0.2
 
+  cssfilter@0.0.10: {}
+
   csv-parse@6.1.0: {}
 
   debug@4.4.3:
@@ -3341,6 +3361,10 @@ snapshots:
     dependencies:
       express: 5.1.0
       ip-address: 10.0.1
+
+  express-request-id@3.0.0:
+    dependencies:
+      uuid: 9.0.1
 
   express@5.1.0:
     dependencies:
@@ -4749,6 +4773,11 @@ snapshots:
     dependencies:
       imurmurhash: 0.1.4
       signal-exit: 3.0.7
+
+  xss@1.0.15:
+    dependencies:
+      commander: 2.20.3
+      cssfilter: 0.0.10
 
   xtend@4.0.2: {}
 

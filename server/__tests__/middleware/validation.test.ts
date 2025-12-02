@@ -85,9 +85,10 @@ describe('Validation Middleware', () => {
       expect(sanitizeString('\ttest\n')).toBe('test');
     });
 
-    it('should remove < and > characters', () => {
-      expect(sanitizeString('<script>alert("xss")</script>')).toBe('scriptalert("xss")/script');
-      expect(sanitizeString('Hello <b>world</b>')).toBe('Hello bworld/b');
+    it('should remove HTML tags and script content', () => {
+      expect(sanitizeString('<script>alert("xss")</script>')).toBe('');
+      expect(sanitizeString('Hello <b>world</b>')).toBe('Hello world');
+      expect(sanitizeString('<img src=x onerror=alert(1)>')).toBe('');
     });
 
     it('should handle non-string inputs', () => {

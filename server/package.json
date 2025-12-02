@@ -10,6 +10,10 @@
     "test": "cross-env NODE_ENV=test jest --detectOpenHandles",
     "test:watch": "cross-env NODE_ENV=test jest --watch",
     "test:coverage": "cross-env NODE_ENV=test jest --coverage",
+    "test:load": "k6 run __tests__/load/k6-tests.js",
+    "test:load:traefik": "cross-env API_URL=https://local.test TEST_USERNAME=pranav TEST_PASSWORD=pranav k6 run __tests__/load/k6-tests.js",
+    "test:smoke": "k6 run __tests__/load/smoke-test.js",
+    "test:smoke:traefik": "cross-env API_URL=https://local.test TEST_USERNAME=pranav TEST_PASSWORD=pranav k6 run __tests__/load/smoke-test.js",
     "migrate": "sleep 10; node-pg-migrate up",
     "type-check": "tsc --noEmit"
   },
@@ -25,13 +29,15 @@
     "dotenv": "^16.6.1",
     "express": "^5.1.0",
     "express-rate-limit": "^8.2.1",
+    "express-request-id": "^3.0.0",
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.0.2",
     "node-cron": "^3.0.3",
     "node-pg-migrate": "^8.0.3",
     "pg": "^8.16.3",
-    "uuid": "^9.0.1"
+    "uuid": "^9.0.1",
+    "xss": "^1.0.15"
   },
   "devDependencies": {
     "@faker-js/faker": "^10.1.0",

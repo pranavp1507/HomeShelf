@@ -4,6 +4,7 @@
  */
 
 import { Response, NextFunction } from 'express';
+import { filterXSS } from 'xss';
 import { AuthRequest } from '../types/express';
 import { AppError } from './errorHandler';
 
@@ -27,10 +28,21 @@ export const isValidISBN = (isbn: string): boolean => {
 
 /**
  * Sanitize string input (trim and prevent XSS)
+ * Enhanced with xss library for comprehensive protection against:
+ * - Script injection
+ * - Event handler attributes
+ * - Encoded characters
+ * - CSS injection
  */
 export const sanitizeString = (str: any): any => {
   if (typeof str !== 'string') return str;
-  return str.trim().replace(/[<>]/g, '');
+
+  // Use xss library for comprehensive sanitization
+  return filterXSS(str.trim(), {
+    whiteList: {}, // No HTML tags allowed
+    stripIgnoreTag: true, // Remove all tags
+    stripIgnoreTagBody: ['script', 'style'], // Remove script and style content
+  });
 };
 
 /**

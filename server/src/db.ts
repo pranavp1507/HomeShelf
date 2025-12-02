@@ -5,8 +5,19 @@
 import { Pool, QueryResult, QueryResultRow } from 'pg';
 import config from './config';
 
+/**
+ * Connection pool configuration optimized for production:
+ * - max: 20 connections (increased from default 10)
+ * - idleTimeoutMillis: 30s (close idle connections to save resources)
+ * - connectionTimeoutMillis: 2s (fail fast if DB unavailable)
+ * - allowExitOnIdle: false (keep pool alive in production)
+ */
 const pool = new Pool({
   connectionString: config.databaseUrl,
+  max: 20,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 2000,
+  allowExitOnIdle: false,
 });
 
 // Test database connection on startup

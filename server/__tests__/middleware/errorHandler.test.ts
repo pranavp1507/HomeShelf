@@ -18,6 +18,16 @@ import {
   notFound,
 } from '../../src/middleware/errorHandler';
 
+// Mock the logger module
+jest.mock('../../src/utils/logger', () => ({
+  logger: {
+    error: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    debug: jest.fn(),
+  }
+}));
+
 // Mock config module with dynamic nodeEnv
 jest.mock('../../src/config', () => ({
   default: {
@@ -133,8 +143,11 @@ describe('Error Handler Middleware', () => {
 
     beforeEach(() => {
       mockRequest = {
+        id: 'test-request-id',
+        method: 'GET',
+        path: '/test',
         originalUrl: '/test',
-      };
+      } as any;
       mockResponse = {
         status: jest.fn().mockReturnThis(),
         json: jest.fn().mockReturnThis(),
@@ -156,15 +169,21 @@ describe('Error Handler Middleware', () => {
       expect(mockResponse.json).toHaveBeenCalledWith({
         success: false,
         error: 'Test error',
+        requestId: 'test-request-id',
       });
     });
 
-    it('should log error to console', () => {
+    it('should log error with logger', () => {
+      const { logger } = require('../../src/utils/logger');
       const error = new AppError('Test error', 400);
 
       errorHandler(error, mockRequest as Request, mockResponse as Response, nextFunction);
 
-      expect(consoleErrorSpy).toHaveBeenCalledWith('Error:', error);
+      expect(logger.error).toHaveBeenCalledWith(
+        'test-request-id',
+        'GET /test - Test error',
+        error
+      );
     });
 
     it('should handle generic Error with 500 status', () => {
@@ -176,6 +195,7 @@ describe('Error Handler Middleware', () => {
       expect(mockResponse.json).toHaveBeenCalledWith({
         success: false,
         error: 'Generic error',
+        requestId: 'test-request-id',
       });
     });
 
@@ -189,6 +209,7 @@ describe('Error Handler Middleware', () => {
       expect(mockResponse.json).toHaveBeenCalledWith({
         success: false,
         error: 'Duplicate entry: This record already exists',
+        requestId: 'test-request-id',
       });
     });
 
@@ -202,6 +223,7 @@ describe('Error Handler Middleware', () => {
       expect(mockResponse.json).toHaveBeenCalledWith({
         success: false,
         error: 'Cannot complete operation: Referenced record does not exist',
+        requestId: 'test-request-id',
       });
     });
 
@@ -215,6 +237,7 @@ describe('Error Handler Middleware', () => {
       expect(mockResponse.json).toHaveBeenCalledWith({
         success: false,
         error: 'Required field is missing',
+        requestId: 'test-request-id',
       });
     });
 
@@ -228,6 +251,7 @@ describe('Error Handler Middleware', () => {
       expect(mockResponse.json).toHaveBeenCalledWith({
         success: false,
         error: 'Resource not found',
+        requestId: 'test-request-id',
       });
     });
 
@@ -284,6 +308,7 @@ describe('Error Handler Middleware', () => {
       expect(mockResponse.json).toHaveBeenCalledWith({
         success: false,
         error: 'Test error',
+        requestId: 'test-request-id',
       });
 
       // Restore original env
@@ -299,6 +324,7 @@ describe('Error Handler Middleware', () => {
       expect(mockResponse.json).toHaveBeenCalledWith({
         success: false,
         error: 'Internal Server Error',
+        requestId: 'test-request-id',
       });
     });
 

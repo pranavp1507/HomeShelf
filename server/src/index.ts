@@ -3,15 +3,17 @@
  * Refactored with modular architecture for better maintainability
  */
 
-import express, { Request, Response } from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
+import addRequestId from 'express-request-id';
 import path from 'path';
 import fs from 'fs';
 import { schedule } from 'node-cron';
 import { query, pool } from './db';
 import config from './config';
+import { logger } from './utils/logger';
 
 // Import middleware
 import { errorHandler, notFound } from './middleware/errorHandler';
@@ -99,6 +101,15 @@ const apiLimiter = rateLimit({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cors(corsOptions));
+
+// Request ID tracking for distributed tracing
+app.use(addRequestId());
+
+// Add request ID to response headers
+app.use((req: any, res: Response, next: NextFunction) => {
+  res.setHeader('X-Request-ID', req.id);
+  next();
+});
 
 // Serve static files from uploads directory
 const uploadsDir = path.join(__dirname, '..', 'uploads');

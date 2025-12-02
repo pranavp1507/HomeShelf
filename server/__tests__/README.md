@@ -43,10 +43,12 @@ pnpm run test:coverage
 ## Current Test Coverage
 
 ### ✅ Implemented
+
 - Password hashing and verification
 - JWT token generation and validation
 
 ### 🚧 TODO (See issues_and_gaps.md)
+
 - Integration tests for all API endpoints
 - Database transaction tests
 - Category filter logic tests
@@ -76,17 +78,17 @@ This setup is planned for future implementation.
 Example test structure:
 
 ```javascript
-describe('Feature Name', () => {
-  describe('Specific Functionality', () => {
-    it('should do something specific', () => {
+describe("Feature Name", () => {
+  describe("Specific Functionality", () => {
+    it("should do something specific", () => {
       // Arrange
-      const input = 'test';
+      const input = "test";
 
       // Act
       const result = someFunction(input);
 
       // Assert
-      expect(result).toBe('expected');
+      expect(result).toBe("expected");
     });
   });
 });
@@ -95,6 +97,7 @@ describe('Feature Name', () => {
 ## Continuous Integration
 
 When CI/CD is set up, tests should run automatically on:
+
 - Every commit
 - Every pull request
 - Before deployment

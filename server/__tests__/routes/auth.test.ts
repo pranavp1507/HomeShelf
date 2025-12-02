@@ -70,13 +70,21 @@ describe('Authentication Routes', () => {
         for (let i = params.length - 1; i >= 0; i--) {
           const param = params[i];
           const placeholder = `\\$${i + 1}(?!\\d)`; // Match $N not followed by another digit
-          const value = param === null ? 'NULL' :
-                       typeof param === 'string' ? `'${param.replace(/'/g, "''")}'` :
-                       typeof param === 'number' ? String(param) :
-                       param instanceof Date ? `'${param.toISOString()}'` :
-                       `'${JSON.stringify(param)}'`;
+          let value: string;
+          if (param === null) {
+            value = 'NULL';
+          } else if (typeof param === 'string') {
+            // Escape single quotes for SQL, and escape $ for regex replacement
+            value = `'${param.replace(/'/g, "''").replace(/\$/g, '$$$$')}'`;
+          } else if (typeof param === 'number') {
+            value = String(param);
+          } else if (param instanceof Date) {
+            value = `'${param.toISOString()}'`;
+          } else {
+            value = `'${JSON.stringify(param)}'`;
+          }
           // Use regex to replace only the placeholder, not substrings in values
-          queryText = queryText.replace(new RegExp(placeholder, 'g'), value as string);
+          queryText = queryText.replace(new RegExp(placeholder, 'g'), value);
         }
       }
       return db.query(queryText);

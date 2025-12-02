@@ -36,23 +36,18 @@ describe('Dashboard Routes', () => {
 
   beforeAll(async () => {
     // Create mock query function
+    // Updated to match optimized single-query dashboard implementation
     mockQuery = jest.fn(async (text: string, params?: any[]) => {
-      // Return different counts based on the query
-      if (text.includes('FROM books')) {
-        return { rows: [{ count: '150' }] };
-      }
-      if (text.includes('FROM members')) {
-        return { rows: [{ count: '75' }] };
-      }
-      if (text.includes('FROM loans WHERE return_date IS NULL AND due_date')) {
-        // Overdue loans
-        return { rows: [{ count: '5' }] };
-      }
-      if (text.includes('FROM loans WHERE return_date IS NULL')) {
-        // Active loans
-        return { rows: [{ count: '20' }] };
-      }
-      return { rows: [{ count: '0' }] };
+      // Return all stats in a single row (optimized query)
+      return {
+        rows: [{
+          total_books: 150,
+          available_books: 120,
+          total_members: 75,
+          active_loans: 20,
+          overdue_loans: 5
+        }]
+      };
     });
 
     queryFn = mockQuery;
@@ -72,29 +67,40 @@ describe('Dashboard Routes', () => {
 
       expect(response.body).toMatchObject({
         total_books: 150,
+        available_books: 120,
         total_members: 75,
         active_loans: 20,
         overdue_loans: 5
       });
     });
 
-    it('should make all required database queries', async () => {
+    it('should make only one optimized database query', async () => {
       await request(app)
         .get('/api/dashboard')
         .expect(200);
 
-      // Verify all 4 stat queries were made
-      expect(mockQuery).toHaveBeenCalledTimes(4);
+      // Verify only 1 query is made (optimized with subqueries)
+      expect(mockQuery).toHaveBeenCalledTimes(1);
 
-      const calls = mockQuery.mock.calls.map((call: any) => call[0]);
-      expect(calls.some((q: string) => q.includes('FROM books'))).toBe(true);
-      expect(calls.some((q: string) => q.includes('FROM members'))).toBe(true);
-      expect(calls.some((q: string) => q.includes('active_loans') || q.includes('return_date IS NULL'))).toBe(true);
+      const queryText = mockQuery.mock.calls[0][0];
+      // Verify it includes all the necessary subqueries
+      expect(queryText).toContain('SELECT');
+      expect(queryText).toContain('FROM books');
+      expect(queryText).toContain('FROM members');
+      expect(queryText).toContain('FROM loans');
     });
 
     it('should return zero counts when no data', async () => {
       mockQuery.mockImplementation(async () => {
-        return { rows: [{ count: '0' }] };
+        return {
+          rows: [{
+            total_books: 0,
+            available_books: 0,
+            total_members: 0,
+            active_loans: 0,
+            overdue_loans: 0
+          }]
+        };
       });
 
       const response = await request(app)
@@ -103,18 +109,20 @@ describe('Dashboard Routes', () => {
 
       expect(response.body).toMatchObject({
         total_books: 0,
+        available_books: 0,
         total_members: 0,
         active_loans: 0,
         overdue_loans: 0
       });
     });
 
-    it('should parse count strings to integers', async () => {
+    it('should return integer counts', async () => {
       const response = await request(app)
         .get('/api/dashboard')
         .expect(200);
 
       expect(typeof response.body.total_books).toBe('number');
+      expect(typeof response.body.available_books).toBe('number');
       expect(typeof response.body.total_members).toBe('number');
       expect(typeof response.body.active_loans).toBe('number');
       expect(typeof response.body.overdue_loans).toBe('number');

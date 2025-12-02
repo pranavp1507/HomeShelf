@@ -6,6 +6,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { AuthRequest } from '../types/express';
 import config from '../config';
+import { logger } from '../utils/logger';
 
 /**
  * Custom application error class with status code
@@ -47,14 +48,11 @@ interface PostgresError extends Error {
  */
 export const errorHandler = (
   err: Error | AppError | PostgresError,
-  req: Request,
+  req: any, // Use any to access req.id from express-request-id
   res: Response,
   next: NextFunction
 ): void => {
   let error: AppError;
-
-  // Log to console for dev
-  console.error('Error:', err);
 
   // If it's already an AppError, use it
   if (err instanceof AppError) {
@@ -84,10 +82,15 @@ export const errorHandler = (
     error = new AppError('Resource not found', 404);
   }
 
-  // Send error response
+  // Log error with request ID for tracing
+  const requestId = req.id || 'unknown';
+  logger.error(requestId, `${req.method} ${req.path} - ${error.message}`, err);
+
+  // Send error response with request ID
   res.status(error.statusCode).json({
     success: false,
     error: error.message,
+    requestId,
     ...(config.nodeEnv === 'development' && { stack: err.stack })
   });
 };
