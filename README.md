@@ -65,7 +65,7 @@ A modern, full-stack library management system built with **React**, **TypeScrip
 
 \`\`\`bash
 # Clone the repository
-git clone https://github.com/yourusername/homeshelf.git
+git clone https://github.com/pranavp1507/homeshelf.git
 cd homeshelf
 
 # Start with Docker Compose
@@ -82,7 +82,7 @@ First-time setup will prompt you to create an admin account.
 
 \`\`\`bash
 # 1. Clone and install dependencies
-git clone https://github.com/yourusername/homeshelf.git
+git clone https://github.com/pranavp1507/homeshelf.git
 cd homeshelf
 
 # Install server dependencies
@@ -215,8 +215,8 @@ docker-compose -f compose.ghcr.yml up -d
 \`\`\`
 
 **Available Images:**
-- \`ghcr.io/yourusername/homeshelf-client:latest\` - React frontend
-- \`ghcr.io/yourusername/homeshelf-server:latest\` - Node.js backend
+- \`ghcr.io/pranavp1507/homeshelf-client:latest\` - React frontend
+- \`ghcr.io/pranavp1507/homeshelf-server:latest\` - Node.js backend
 
 Images are automatically built and published via GitHub Actions on every release.
 
@@ -274,8 +274,8 @@ This project is licensed under the **MIT License** - see the [LICENSE](./LICENSE
 
 ## 📞 Support
 
-- **Issues**: [GitHub Issues](https://github.com/yourusername/homeshelf/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/yourusername/homeshelf/discussions)
+- **Issues**: [GitHub Issues](https://github.com/pranavp1507/homeshelf/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/pranavp1507/homeshelf/discussions)
 - **Documentation**: [Full Documentation](./CLAUDE.md)
 
 ---

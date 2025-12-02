@@ -65,8 +65,8 @@ Only use this setup if you specifically need:
 ### Step 1: Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/mulampuzha-library.git
-cd mulampuzha-library
+git clone https://github.com/pranavp1507/homeshelf.git
+cd homeshelf
 ```
 
 ### Step 2: Modify Hosts File

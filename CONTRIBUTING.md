@@ -263,7 +263,7 @@ Documentation files to update:
 
 ## ❓ Questions?
 
-- Open a [Discussion](https://github.com/yourusername/homeshelf/discussions)
+- Open a [Discussion](https://github.com/pranavp1507/homeshelf/discussions)
 - Comment on related issues
 - Check existing documentation
 

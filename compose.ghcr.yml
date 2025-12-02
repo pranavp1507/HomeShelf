@@ -37,8 +37,7 @@ services:
       retries: 5
 
   server:
-    # Change 'yourusername' to your GitHub username/organization
-    image: ghcr.io/yourusername/homeshelf-server:latest
+    image: ghcr.io/pranavp1507/homeshelf-server:latest
     restart: unless-stopped
     environment:
       # Server Configuration
@@ -85,8 +84,7 @@ services:
       start_period: 40s
 
   client:
-    # Change 'yourusername' to your GitHub username/organization
-    image: ghcr.io/yourusername/homeshelf-client:latest
+    image: ghcr.io/pranavp1507/homeshelf-client:latest
     restart: unless-stopped
     ports:
       - "${CLIENT_PORT:-3000}:3000"

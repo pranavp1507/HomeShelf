@@ -158,8 +158,8 @@ make prod
 
 **Step 1:** Clone repository
 ```bash
-git clone https://github.com/user/mulampuzha-library.git
-cd mulampuzha-library
+git clone https://github.com/pranavp1507/homeshelf.git
+cd homeshelf
 ```
 
 **Step 2:** (Optional) Customize
@@ -184,8 +184,8 @@ docker-compose -f compose.dev.yml up --build
 
 **Step 1:** Clone repository
 ```bash
-git clone https://github.com/user/mulampuzha-library.git
-cd mulampuzha-library
+git clone https://github.com/pranavp1507/homeshelf.git
+cd homeshelf
 ```
 
 **Step 2:** Modify hosts file
@@ -291,12 +291,12 @@ docker-compose -f compose.dev.yml up
 docker-compose -f compose.prod.yml build
 
 # Tag and push to Docker Hub (optional)
-docker tag mulampuzha-library_server:latest yourusername/library-server:latest
-docker push yourusername/library-server:latest
+docker tag homeshelf_server:latest pranavp1507/homeshelf-server:latest
+docker push pranavp1507/homeshelf-server:latest
 
 # On production server
-git clone https://github.com/user/mulampuzha-library.git
-cd mulampuzha-library
+git clone https://github.com/pranavp1507/homeshelf.git
+cd homeshelf
 
 # Edit compose.prod.yml with your domain
 nano compose.prod.yml

@@ -474,7 +474,7 @@ docker-compose -f compose.dev.yml exec postgres psql -U user -d library
 
 ## Still Having Issues?
 
-1. Check [existing issues](https://github.com/yourusername/mulampuzha-library/issues)
+1. Check [existing issues](https://github.com/pranavp1507/homeshelf/issues)
 2. Read the [compatibility analysis](platform_compatibility_analysis.md)
 3. Open a new issue with:
    - Your OS and version
