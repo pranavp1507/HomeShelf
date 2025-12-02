@@ -2,7 +2,7 @@
 
 # Default target - show help
 help:
-	@echo "Mulampuzha Library Management System - Make Commands"
+	@echo "HomeShelf - Personal Library Management System"
 	@echo ""
 	@echo "Development:"
 	@echo "  make dev          - Start development environment (simple, no HTTPS)"

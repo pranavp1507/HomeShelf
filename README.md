@@ -1,4 +1,4 @@
-# 📚 Mulampuzha Library Management System
+# 📚 HomeShelf - Personal Library Management System
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Tests](https://img.shields.io/badge/tests-486%2F486%20passing-brightgreen)](./docs/testing_guide.md)
@@ -65,8 +65,8 @@ A modern, full-stack library management system built with **React**, **TypeScrip
 
 \`\`\`bash
 # Clone the repository
-git clone https://github.com/yourusername/mulampuzha-library.git
-cd mulampuzha-library
+git clone https://github.com/yourusername/homeshelf.git
+cd homeshelf
 
 # Start with Docker Compose
 docker-compose -f compose.dev.yml up -d
@@ -82,8 +82,8 @@ First-time setup will prompt you to create an admin account.
 
 \`\`\`bash
 # 1. Clone and install dependencies
-git clone https://github.com/yourusername/mulampuzha-library.git
-cd mulampuzha-library
+git clone https://github.com/yourusername/homeshelf.git
+cd homeshelf
 
 # Install server dependencies
 cd server
@@ -184,14 +184,41 @@ cd server && pnpm test:load   # 16-minute load test
 
 ### Docker Compose Options
 
-1. **Development** (\`compose.dev.yml\`) - Simple localhost setup
-2. **Local HTTPS** (\`compose.yml\`) - Traefik with self-signed certs
-3. **Production** (\`compose.prod.yml\`) - Let's Encrypt SSL
+1. **Development** (\`compose.dev.yml\`) - Simple localhost setup, build locally
+2. **Local HTTPS** (\`compose.yml\`) - Traefik with self-signed certs, build locally
+3. **Production** (\`compose.prod.yml\`) - Let's Encrypt SSL, build locally
+4. **GitHub Container Registry** (\`compose.ghcr.yml\`) - Pre-built images, no build needed! ⚡
 
 \`\`\`bash
-# Production deployment
+# Production deployment (build locally)
 docker-compose -f compose.prod.yml up -d
+
+# Or use pre-built images from GitHub Container Registry
+cp .env.ghcr.example .env
+# Edit .env with your configuration
+docker-compose -f compose.ghcr.yml up -d
 \`\`\`
+
+### 📦 Using Pre-built Docker Images
+
+The easiest way to deploy HomeShelf is using pre-built images from GitHub Container Registry:
+
+\`\`\`bash
+# 1. Copy and configure environment file
+cp .env.ghcr.example .env
+# Edit .env - set JWT_SECRET and database password
+
+# 2. Start the application
+docker-compose -f compose.ghcr.yml up -d
+
+# 3. Access at http://localhost:3000
+\`\`\`
+
+**Available Images:**
+- \`ghcr.io/yourusername/homeshelf-client:latest\` - React frontend
+- \`ghcr.io/yourusername/homeshelf-server:latest\` - Node.js backend
+
+Images are automatically built and published via GitHub Actions on every release.
 
 ### Environment Variables
 
@@ -247,8 +274,8 @@ This project is licensed under the **MIT License** - see the [LICENSE](./LICENSE
 
 ## 📞 Support
 
-- **Issues**: [GitHub Issues](https://github.com/yourusername/mulampuzha-library/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/yourusername/mulampuzha-library/discussions)
+- **Issues**: [GitHub Issues](https://github.com/yourusername/homeshelf/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/yourusername/homeshelf/discussions)
 - **Documentation**: [Full Documentation](./CLAUDE.md)
 
 ---

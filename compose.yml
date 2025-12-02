@@ -92,7 +92,7 @@ services:
       args:
         # Pass build arguments for Vite (these are baked into the build)
         VITE_API_URL: https://local.test/api
-        VITE_LIBRARY_NAME: "Mulampuzha Library"
+        VITE_LIBRARY_NAME: "HomeShelf"
         VITE_LIBRARY_LOGO: "/Logo.svg"
     environment:
       # API Configuration

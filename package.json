@@ -1,7 +1,7 @@
 {
-  "name": "mulampuzha-library",
+  "name": "homeshelf",
   "version": "1.0.0",
-  "description": "Full-stack Library Management System",
+  "description": "Personal Home Library Management System",
   "private": true,
   "scripts": {
     "test:e2e": "playwright test",

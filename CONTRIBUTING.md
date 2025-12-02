@@ -1,4 +1,4 @@
-# Contributing to Mulampuzha Library Management System
+# Contributing to HomeShelf
 
 Thank you for your interest in contributing! This document provides guidelines and instructions for contributing to this project.
 
@@ -59,8 +59,8 @@ Enhancement suggestions are welcome! Please include:
 
 ```bash
 # Clone your fork
-git clone https://github.com/YOUR_USERNAME/mulampuzha-library.git
-cd mulampuzha-library
+git clone https://github.com/YOUR_USERNAME/homeshelf.git
+cd homeshelf
 
 # Install dependencies
 cd server && pnpm install
@@ -263,7 +263,7 @@ Documentation files to update:
 
 ## ❓ Questions?
 
-- Open a [Discussion](https://github.com/yourusername/mulampuzha-library/discussions)
+- Open a [Discussion](https://github.com/yourusername/homeshelf/discussions)
 - Comment on related issues
 - Check existing documentation
 

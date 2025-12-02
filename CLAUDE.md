@@ -1,6 +1,6 @@
-# Mulampuzha Library Management System
+# HomeShelf - Personal Library Management System
 
-**Full-stack Library Management System** - React + TypeScript, Node.js + TypeScript, Express, PostgreSQL
+**Full-stack Personal Library Management System** - React + TypeScript, Node.js + TypeScript, Express, PostgreSQL
 
 **Status:** Production-ready - All critical security/performance issues fixed (Nov 30, 2025)
 
@@ -38,7 +38,7 @@
 ## Project Structure (Simplified)
 
 ```text
-E:\Mulampuzha-Library/
+homeshelf/
 ├── client/                    # React Frontend (TypeScript)
 │   ├── src/
 │   │   ├── components/        # React components
