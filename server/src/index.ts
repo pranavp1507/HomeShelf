@@ -229,6 +229,24 @@ const checkOverdueLoans = async (): Promise<void> => {
 };
 
 // ========================================
+// Security Validation
+// ========================================
+// Ensure JWT_SECRET is set before starting server
+if (!config.jwtSecret) {
+  console.error('\n❌ FATAL ERROR: JWT_SECRET environment variable is not set!');
+  console.error('This is required for authentication to work securely.');
+  console.error('Please set JWT_SECRET in your .env file.\n');
+  process.exit(1);
+}
+
+// Validate JWT_SECRET length (minimum 32 characters recommended)
+if (config.jwtSecret.length < 32) {
+  console.warn('\n⚠️  WARNING: JWT_SECRET is too short!');
+  console.warn('For security, use at least 32 characters.');
+  console.warn('Generate a strong secret: node -e "console.log(require(\'crypto\').randomBytes(32).toString(\'hex\'))"\n');
+}
+
+// ========================================
 // Server Startup
 // ========================================
 app.listen(port, () => {
@@ -238,6 +256,7 @@ app.listen(port, () => {
   console.log(`📡 Server: http://localhost:${port}`);
   console.log(`🌍 Environment: ${config.nodeEnv}`);
   console.log(`📁 Uploads: ${uploadsDir}`);
+  console.log(`✅ JWT Secret: Configured`);
   console.log(`========================================\n`);
 
   // Check admin user existence

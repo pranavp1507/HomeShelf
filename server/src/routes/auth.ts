@@ -79,14 +79,12 @@ router.post('/login', asyncHandler(async (req: AuthRequest, res: Response) => {
   const { rows } = await query<User>('SELECT * FROM users WHERE username = $1', [username]);
   const user = rows[0];
 
-  if (!user) {
-    res.status(401).json({ error: 'Invalid credentials' });
-    return;
-  }
+  // Always compare passwords (even if user doesn't exist) to prevent timing attacks
+  // Use a dummy hash if user not found to maintain consistent timing
+  const hashToCompare = user?.password_hash || '$2b$10$dummyhashtopreventtimingattackxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';
+  const isPasswordValid = await authUtils.comparePasswords(password, hashToCompare);
 
-  const isPasswordValid = await authUtils.comparePasswords(password, user.password_hash);
-
-  if (!isPasswordValid) {
+  if (!user || !isPasswordValid) {
     res.status(401).json({ error: 'Invalid credentials' });
     return;
   }
