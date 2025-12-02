@@ -2,6 +2,10 @@
     |-- settings.local.json
 |-- .dockerignore
 |-- .editorconfig
+|-- .env.ghcr.example
+|-- .github
+    |-- workflows
+        |-- docker-publish.yml
 |-- .gitignore
 |-- CLAUDE.md
 |-- client
@@ -10,8 +14,10 @@
     |-- .env.example
     |-- .gitignore
     |-- Containerfile
+    |-- Dockerfile
     |-- eslint.config.js
     |-- index.html
+    |-- nginx.conf
     |-- package.json
     |-- pnpm-lock.yaml
     |-- pnpm-workspace.yaml
@@ -87,8 +93,10 @@
     |-- vite.config.ts
     |-- vitest.config.ts
 |-- compose.dev.yml
+|-- compose.ghcr.yml
 |-- compose.prod.yml
 |-- compose.yml
+|-- CONTRIBUTING.md
 |-- docs
     |-- advanced_setup.md
     |-- app_plan.md
@@ -96,11 +104,17 @@
     |-- code_review_report.md
     |-- customization_guide.md
     |-- deployment_options.md
+    |-- implementation_roadmap.md
+    |-- IMPLEMENTATION_SUMMARY.md
     |-- improvement_plan.md
     |-- issues_and_gaps.md
+    |-- PHASE1_COMPLETION_SUMMARY.md
+    |-- PHASE1_TEST_FIXES.md
     |-- phase_5_implementation_plan.md
     |-- platform_compatibility_analysis.md
+    |-- remaining_work.md
     |-- server_testing_plan.md
+    |-- SESSION_SUMMARY.md
     |-- testing_guide.md
     |-- troubleshooting_platforms.md
     |-- typescript_migration_plan.md
@@ -127,6 +141,7 @@
     |-- Containerfile
     |-- controllers
     |-- db.js
+    |-- Dockerfile
     |-- index.js
     |-- index.js.backup
     |-- jest.config.js
@@ -134,7 +149,6 @@
         |-- errorHandler.js
         |-- validation.js
     |-- migrations
-        |-- 1764482189831_add-performance-indexes.js
         |-- 20251120093500_create_books_table.js
         |-- 20251120093501_create_members_table.js
         |-- 20251120093502_create_loans_table.js
@@ -142,6 +156,7 @@
         |-- 20251120100000_add_cover_image_path_to_books.js
         |-- 20251120100500_create_categories_and_book_categories_table.js
         |-- 20251126130000_add_password_reset_to_users.js
+        |-- 20251130010000_add-performance-indexes.js
     |-- package.json
     |-- pnpm-lock.yaml
     |-- README.md
@@ -158,11 +173,18 @@
     |-- src
         |-- config
             |-- index.ts
+            |-- sentry.ts
+            |-- SENTRY_SETUP.md
         |-- db.ts
         |-- index.ts
         |-- middleware
             |-- errorHandler.ts
             |-- validation.ts
+        |-- repositories
+            |-- BaseRepository.ts
+            |-- BookRepository.ts
+            |-- LoanRepository.ts
+            |-- MemberRepository.ts
         |-- routes
             |-- auth.ts
             |-- books.ts
@@ -173,6 +195,10 @@
             |-- members.ts
             |-- system.ts
             |-- users.ts
+        |-- services
+            |-- BookService.ts
+            |-- LoanService.ts
+            |-- MemberService.ts
         |-- types
             |-- book.ts
             |-- category.ts
@@ -184,6 +210,7 @@
         |-- utils
             |-- authUtils.ts
             |-- fileUpload.ts
+            |-- logger.ts
     |-- start.sh
     |-- tsconfig.json
     |-- uploads
@@ -200,6 +227,10 @@
             |-- users.ts
         |-- helpers
             |-- database.ts
+        |-- load
+            |-- k6-tests.js
+            |-- README.md
+            |-- smoke-test.js
         |-- middleware
             |-- errorHandler.test.ts
             |-- validation.test.ts
