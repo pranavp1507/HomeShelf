@@ -5,8 +5,8 @@
  * Implements the Repository pattern for clean separation of data access logic.
  */
 
-import { Pool, PoolClient } from 'pg';
-import pool from '../db';
+import { Pool, PoolClient, QueryResultRow } from 'pg';
+import { pool } from '../db';
 
 export interface PaginationOptions {
   page: number;
@@ -28,7 +28,7 @@ export interface PaginatedResult<T> {
  *
  * @template T - The entity type this repository manages
  */
-export abstract class BaseRepository<T> {
+export abstract class BaseRepository<T extends QueryResultRow> {
   protected pool: Pool;
   protected abstract tableName: string;
 

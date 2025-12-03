@@ -46,7 +46,7 @@ describe('MultiSelect Component', () => {
 
   it('closes dropdown when clicked outside', async () => {
     const user = userEvent.setup();
-    const { container } = render(
+    render(
       <div>
         <MultiSelect {...defaultProps} />
         <div data-testid="outside">Outside element</div>

@@ -76,7 +76,7 @@ describe('ErrorMessage Component', () => {
 
   it('renders close button with X icon', () => {
     const handleClose = vi.fn();
-    const { container } = render(<ErrorMessage message="Error" onClose={handleClose} />);
+    render(<ErrorMessage message="Error" onClose={handleClose} />);
     const closeButton = screen.getByRole('button', { name: 'Close' });
     const xIcon = closeButton.querySelector('svg');
     expect(xIcon).toBeInTheDocument();

@@ -140,7 +140,7 @@ describe('Modal Component', () => {
   });
 
   it('renders close button with X icon', () => {
-    const { container } = render(<Modal {...defaultProps} />);
+    render(<Modal {...defaultProps} />);
     const closeButton = screen.getByRole('button', { name: 'Close modal' });
     const xIcon = closeButton.querySelector('svg');
     expect(xIcon).toBeInTheDocument();
