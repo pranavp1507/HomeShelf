@@ -53,36 +53,69 @@ docker-compose -f compose.ghcr.yml up -d
 
 **Setup:**
 
-1. **Copy environment template:**
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/pranavp1507/HomeShelf.git
+   cd HomeShelf
+   ```
+
+2. **Copy environment template:**
    ```bash
    cp .env.example .env
    ```
 
-2. **Edit `.env` with your branding:**
+3. **Edit `.env` with your configuration:**
    ```env
-   # Your custom library name
-   VITE_LIBRARY_NAME=My Personal Library
+   # Required: Database and JWT
+   POSTGRES_PASSWORD=your_secure_password
+   JWT_SECRET=your_jwt_secret_min_32_chars  # Generate with: openssl rand -hex 32
 
-   # Your custom logo path or URL
+   # Optional: Customize branding
+   VITE_LIBRARY_NAME=My Personal Library
    VITE_LIBRARY_LOGO=/my-logo.svg
 
-   # Or use an external URL
-   # VITE_LIBRARY_LOGO=https://example.com/logo.png
+   # Optional: Custom hostname for Traefik (if using compose.yml)
+   TRAEFIK_HOST=homelib.local
    ```
 
-3. **Add your logo file (if using local path):**
+4. **Add your logo file (if customizing):**
    ```bash
    # Place your logo in the client public folder
    cp /path/to/your/logo.svg client/public/my-logo.svg
    ```
 
-4. **Build and start:**
-   ```bash
-   # For development (localhost ports)
-   docker-compose -f compose.dev.yml up --build
+5. **Choose deployment method:**
 
-   # For production (with Traefik HTTPS)
+   **Option A: Simple Development (HTTP, no certificates needed)**
+   ```bash
+   docker-compose -f compose.dev.yml up --build
+   # Access: http://localhost:3000
+   ```
+
+   **Option B: Production with HTTPS (requires certificates)**
+
+   a. Generate self-signed certificates:
+   ```bash
+   mkdir -p traefik/certs
+   openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+     -keyout traefik/certs/key.pem \
+     -out traefik/certs/cert.pem \
+     -subj "/CN=homelib.local"
+   ```
+
+   b. Add hostname to your hosts file:
+   ```bash
+   # Linux/Mac
+   echo "127.0.0.1  homelib.local" | sudo tee -a /etc/hosts
+
+   # Windows (run as Administrator in PowerShell)
+   Add-Content C:\Windows\System32\drivers\etc\hosts "127.0.0.1  homelib.local"
+   ```
+
+   c. Start with Traefik:
+   ```bash
    docker-compose -f compose.yml up --build -d
+   # Access: https://homelib.local (accept browser warning for self-signed cert)
    ```
 
 **Customizable via .env:**

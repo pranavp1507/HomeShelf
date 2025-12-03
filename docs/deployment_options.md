@@ -81,12 +81,12 @@ make advanced
 ```
 
 **Access:**
-- Frontend: https://local.test
-- Backend: https://local.test/api
+- Frontend: https://homelib.local
+- Backend: https://homelib.local/api
 - Traefik Dashboard: http://localhost:8080
 
 **Requires:**
-1. ⚠️ Modify hosts file: Add `127.0.0.1 local.test`
+1. ⚠️ Modify hosts file: Add `127.0.0.1 homelib.local`
 2. ⚠️ Generate SSL certificates in `traefik/certs/`
 3. ⚠️ Configure container socket (Podman/Docker specific)
 
@@ -192,12 +192,12 @@ cd homeshelf
 
 **Linux/Mac:**
 ```bash
-echo "127.0.0.1 local.test" | sudo tee -a /etc/hosts
+echo "127.0.0.1 homelib.local" | sudo tee -a /etc/hosts
 ```
 
 **Windows (as Administrator):**
 ```powershell
-Add-Content C:\Windows\System32\drivers\etc\hosts "127.0.0.1 local.test"
+Add-Content C:\Windows\System32\drivers\etc\hosts "127.0.0.1 homelib.local"
 ```
 
 **Step 3:** Generate SSL certificates
@@ -207,7 +207,7 @@ cd traefik/certs
 
 # Generate self-signed certificate
 openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365 -nodes \
-  -subj "/CN=local.test"
+  -subj "/CN=homelib.local"
 
 cd ../..
 ```
@@ -240,7 +240,7 @@ docker-compose up --build
 ```
 
 **Step 6:** Access
-- Open https://local.test (accept browser warning)
+- Open https://homelib.local (accept browser warning)
 - Create admin account
 - Done!
 
@@ -343,12 +343,12 @@ Common fixes:
 
 **Browser shows "Your connection is not private"**
 - This is expected with self-signed certificates
-- Click "Advanced" → "Proceed to local.test"
+- Click "Advanced" → "Proceed to homelib.local"
 - Or install certificate in system trust store
 
-**"local.test not found"**
+**"homelib.local not found"**
 - Check hosts file has the entry
-- Try `ping local.test` to verify
+- Try `ping homelib.local` to verify
 
 ### compose.prod.yml Issues
 

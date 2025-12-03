@@ -11,6 +11,9 @@ client/dist/
 # local server uploads directory
 server/uploads/
 
+# Traefik certificates (user-generated)
+traefik/certs/
+
 # IDEs and other tools
 .idea/
 .vscode/

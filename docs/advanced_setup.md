@@ -71,29 +71,29 @@ cd homeshelf
 
 ### Step 2: Modify Hosts File
 
-Add `local.test` to your hosts file so your browser can resolve it to localhost.
+Add `homelib.local` to your hosts file so your browser can resolve it to localhost.
 
 **Linux/macOS:**
 ```bash
 # Add entry to hosts file
-echo "127.0.0.1 local.test" | sudo tee -a /etc/hosts
+echo "127.0.0.1 homelib.local" | sudo tee -a /etc/hosts
 
 # Verify it was added
-grep local.test /etc/hosts
+grep homelib.local /etc/hosts
 ```
 
 **Windows (PowerShell as Administrator):**
 ```powershell
 # Add entry to hosts file
-Add-Content C:\Windows\System32\drivers\etc\hosts "127.0.0.1 local.test"
+Add-Content C:\Windows\System32\drivers\etc\hosts "127.0.0.1 homelib.local"
 
 # Verify it was added
-Get-Content C:\Windows\System32\drivers\etc\hosts | Select-String "local.test"
+Get-Content C:\Windows\System32\drivers\etc\hosts | Select-String "homelib.local"
 ```
 
 **Verify:**
 ```bash
-ping local.test
+ping homelib.local
 # Should respond from 127.0.0.1
 ```
 
@@ -108,8 +108,8 @@ cd traefik/certs
 
 # Generate self-signed certificate valid for 365 days
 openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365 -nodes \
-  -subj "/CN=local.test" \
-  -addext "subjectAltName=DNS:local.test"
+  -subj "/CN=homelib.local" \
+  -addext "subjectAltName=DNS:homelib.local"
 
 # Set appropriate permissions
 chmod 600 key.pem
@@ -123,7 +123,7 @@ cd ../..
 ```bash
 # Check certificate details
 openssl x509 -in traefik/certs/cert.pem -text -noout | grep -A 1 "Subject:"
-# Should show CN=local.test
+# Should show CN=homelib.local
 ```
 
 ### Step 4: Configure Container Socket Path
@@ -218,7 +218,7 @@ nano client/.env
 
 Update:
 ```env
-VITE_API_URL=https://local.test/api
+VITE_API_URL=https://homelib.local/api
 VITE_LIBRARY_NAME=My Library
 VITE_LIBRARY_LOGO=/Logo.svg
 ```
@@ -273,12 +273,12 @@ You should see:
 
 ### Main Application
 
-**URL:** https://local.test
+**URL:** https://homelib.local
 
 **First visit:**
 1. Browser will show "Your connection is not private" warning
 2. This is **expected** with self-signed certificates
-3. Click "Advanced" → "Proceed to local.test (unsafe)"
+3. Click "Advanced" → "Proceed to homelib.local (unsafe)"
 
 **Trust certificate (optional):**
 
@@ -287,7 +287,7 @@ To avoid warnings every time, install the certificate in your system:
 **Linux:**
 ```bash
 # Copy to system trust store
-sudo cp traefik/certs/cert.pem /usr/local/share/ca-certificates/local.test.crt
+sudo cp traefik/certs/cert.pem /usr/local/share/ca-certificates/homelib.local.crt
 sudo update-ca-certificates
 ```
 
@@ -333,20 +333,20 @@ docker-compose exec postgres psql -U user -d library
 
 ## Troubleshooting
 
-### Issue: "local.test not found"
+### Issue: "homelib.local not found"
 
 **Symptom:** Browser shows "This site can't be reached"
 
 **Solutions:**
 1. Verify hosts file entry:
    ```bash
-   grep local.test /etc/hosts  # Linux/macOS
+   grep homelib.local /etc/hosts  # Linux/macOS
    # OR
-   Get-Content C:\Windows\System32\drivers\etc\hosts | Select-String "local.test"  # Windows
+   Get-Content C:\Windows\System32\drivers\etc\hosts | Select-String "homelib.local"  # Windows
    ```
 2. Ping to verify:
    ```bash
-   ping local.test
+   ping homelib.local
    # Should respond from 127.0.0.1
    ```
 3. Clear DNS cache:
@@ -405,15 +405,15 @@ Error: Cannot connect to the Docker daemon at unix:///var/run/docker.sock
 1. **Verify certificate CN matches domain:**
    ```bash
    openssl x509 -in traefik/certs/cert.pem -text -noout | grep Subject:
-   # Should show: CN=local.test
+   # Should show: CN=homelib.local
    ```
 
 2. **Regenerate certificate with SAN:**
    ```bash
    cd traefik/certs
    openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365 -nodes \
-     -subj "/CN=local.test" \
-     -addext "subjectAltName=DNS:local.test"
+     -subj "/CN=homelib.local" \
+     -addext "subjectAltName=DNS:homelib.local"
    ```
 
 3. **Install certificate in system trust store** (see [Accessing the Application](#accessing-the-application))
@@ -456,7 +456,7 @@ Error: Cannot connect to the Docker daemon at unix:///var/run/docker.sock
 
 ### Issue: Services Start But Can't Connect
 
-**Symptom:** Traefik shows green, but https://local.test shows errors
+**Symptom:** Traefik shows green, but https://homelib.local shows errors
 
 **Solutions:**
 
@@ -478,14 +478,14 @@ Error: Cannot connect to the Docker daemon at unix:///var/run/docker.sock
    # Should NOT work (not exposed)
 
    # Test via Traefik
-   curl https://local.test/api/books --insecure
+   curl https://homelib.local/api/books --insecure
    # Should return JSON
    ```
 
 4. **Verify frontend env:**
    ```bash
    docker-compose exec client env | grep VITE_API_URL
-   # Should show: VITE_API_URL=https://local.test/api
+   # Should show: VITE_API_URL=https://homelib.local/api
    ```
 
 ### Issue: Windows-Specific Errors

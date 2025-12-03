@@ -214,24 +214,41 @@ cd server && pnpm test:load # 16-minute load test
 
 ### Docker Compose Options
 
-1. **Development** (\`compose.dev.yml\`) - Simple localhost setup, build locally
-2. **Local HTTPS** (\`compose.yml\`) - Traefik with self-signed certs, build locally
-3. **Production** (\`compose.prod.yml\`) - Let's Encrypt SSL, build locally
-4. **GitHub Container Registry** (\`compose.ghcr.yml\`) - Pre-built images, no build needed! ⚡
+1. **Development** (\`compose.dev.yml\`) - Simple localhost HTTP, no certificates needed
+2. **Local HTTPS** (\`compose.yml\`) - Traefik with self-signed certs (requires certificate setup)
+3. **Production** (\`compose.prod.yml\`) - Let's Encrypt SSL for real domains
+4. **GitHub Container Registry** (\`compose.ghcr.yml\`) - Pre-built images, fastest setup! ⚡
+
+**For Local HTTPS with compose.yml:**
 
 ```bash
+# 1. Generate self-signed certificates
+mkdir -p traefik/certs
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+  -keyout traefik/certs/key.pem \
+  -out traefik/certs/cert.pem \
+  -subj "/CN=homelib.local"
 
-# Production deployment (build locally)
+# 2. Add hostname to hosts file
+# Linux/Mac:
+echo "127.0.0.1  homelib.local" | sudo tee -a /etc/hosts
+# Windows (as Administrator):
+# Add-Content C:\Windows\System32\drivers\etc\hosts "127.0.0.1  homelib.local"
 
+# 3. Copy and configure .env
+cp .env.example .env
+# Edit .env with your JWT_SECRET and passwords
+
+# 4. Start with Traefik
+docker-compose -f compose.yml up --build -d
+# Access: https://homelib.local (accept browser warning for self-signed cert)
+```
+
+**For Production with Let's Encrypt:**
+
+```bash
+# Configure domain in .env, then:
 docker-compose -f compose.prod.yml up -d
-
-# Or use pre-built images from GitHub Container Registry
-
-cp .env.ghcr.example .env
-
-# Edit .env with your configuration
-
-docker-compose -f compose.ghcr.yml up -d
 ```
 
 ### 📦 Using Pre-built Docker Images

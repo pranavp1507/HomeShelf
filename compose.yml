@@ -1,20 +1,32 @@
-# Docker Compose Configuration with Traefik (HTTPS via local.test)
+# Docker Compose Configuration with Traefik HTTPS
 #
-# This configuration includes Traefik reverse proxy for HTTPS access.
+# This configuration includes Traefik reverse proxy for local HTTPS access.
 # Works with both Docker and Podman - automatically detects the socket.
+#
+# Setup:
+#   1. Copy .env.example to .env and configure:
+#      - TRAEFIK_HOST (default: homelib.local)
+#      - TRAEFIK_HTTPS_PORT (default: 443)
+#      - Database credentials and JWT_SECRET
+#      - Optional: Branding (VITE_LIBRARY_NAME, VITE_LIBRARY_LOGO)
+#
+#   2. Add hostname to /etc/hosts (Linux/Mac) or C:\Windows\System32\drivers\etc\hosts (Windows):
+#      127.0.0.1  homelib.local
+#
+#   3. Generate self-signed certificates:
+#      mkdir -p traefik/certs
+#      openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+#        -keyout traefik/certs/key.pem -out traefik/certs/cert.pem \
+#        -subj "/CN=homelib.local"
 #
 # Usage with Docker:
 #   docker-compose up --build
-#   # Access: https://local.test
+#   # Access: https://homelib.local (or your configured TRAEFIK_HOST)
 #
 # Usage with Podman:
 #   export DOCKER_SOCKET=/run/podman/podman.sock
 #   podman-compose up --build
-#   # Access: https://local.test
-#
-# Requirements:
-#   - Self-signed certificates in traefik/certs/ (cert.pem, key.pem)
-#   - Local DNS setup: Add "127.0.0.1 local.test" to /etc/hosts (or C:\Windows\System32\drivers\etc\hosts)
+#   # Access: https://homelib.local
 #
 # Note: For simpler local development without Traefik, use compose.dev.yml instead:
 #   docker-compose -f compose.dev.yml up
@@ -26,10 +38,10 @@ services:
     restart: always
     environment:
       POSTGRES_DB: library
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
+      POSTGRES_USER: ${POSTGRES_USER:-library_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
@@ -40,37 +52,37 @@ services:
     command: ["sh", "start.sh"]
     environment:
       # Server Configuration
-      NODE_ENV: development
+      NODE_ENV: ${NODE_ENV:-development}
       PORT: 3001
 
       # Database Configuration
-      DATABASE_URL: postgres://user:password@postgres:5432/library
+      DATABASE_URL: postgres://${POSTGRES_USER:-library_user}:${POSTGRES_PASSWORD:-password}@postgres:5432/library
 
       # JWT Secret - IMPORTANT: Change this in production!
       # Generate one using: openssl rand -hex 32
-      JWT_SECRET: "1ab773f62875b39683177b36ce4bbb18fed5bd539618c53b732c07e2eb941f29"
+      JWT_SECRET: ${JWT_SECRET:-1ab773f62875b39683177b36ce4bbb18fed5bd539618c53b732c07e2eb941f29}
 
       # Google Books API (Optional)
       # Get your API key from: https://console.cloud.google.com/apis/credentials
-      GOOGLE_BOOKS_API_KEY: ""
+      GOOGLE_BOOKS_API_KEY: ${GOOGLE_BOOKS_API_KEY:-}
 
-      # Client URL (for CORS)
-      CLIENT_URL: "http://localhost:3000"
+      # Client URL (for CORS) - Uses Traefik hostname
+      CLIENT_URL: https://${TRAEFIK_HOST:-homelib.local}
 
       # Email/SMTP Configuration (Optional)
       # Set to 'true' to enable email notifications
-      ENABLE_EMAIL_NOTIFICATIONS: "false"
-      SMTP_HOST: "smtp.gmail.com"
-      SMTP_PORT: "587"
-      SMTP_SECURE: "false"
-      SMTP_USER: ""
-      SMTP_PASSWORD: ""
-      SMTP_FROM: "library@example.com"
+      ENABLE_EMAIL_NOTIFICATIONS: ${ENABLE_EMAIL_NOTIFICATIONS:-false}
+      SMTP_HOST: ${SMTP_HOST:-smtp.gmail.com}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_SECURE: ${SMTP_SECURE:-false}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-library@example.com}
 
       # Overdue Notifications
       # Set to 'false' to disable overdue checks
-      ENABLE_OVERDUE_CHECKS: "true"
-      OVERDUE_CHECK_INTERVAL: "60"
+      ENABLE_OVERDUE_CHECKS: ${ENABLE_OVERDUE_CHECKS:-true}
+      OVERDUE_CHECK_INTERVAL: ${OVERDUE_CHECK_INTERVAL:-60}
     volumes:
       - ./server:/app
       - /app/node_modules
@@ -80,7 +92,7 @@ services:
     restart: always
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.server.rule=Host(`local.test`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.server.rule=Host(`${TRAEFIK_HOST:-homelib.local}`) && PathPrefix(`/api`)"
       - "traefik.http.routers.server.entrypoints=websecure"
       - "traefik.http.routers.server.tls=true"
       - "traefik.http.services.server.loadbalancer.server.port=3001"
@@ -92,7 +104,7 @@ services:
       args:
         # Build-time arguments (baked into JavaScript bundle)
         # Set these in your .env file to customize branding
-        VITE_API_URL: https://local.test/api
+        VITE_API_URL: https://${TRAEFIK_HOST:-homelib.local}/api
         VITE_LIBRARY_NAME: ${VITE_LIBRARY_NAME:-HomeShelf}
         VITE_LIBRARY_LOGO: ${VITE_LIBRARY_LOGO:-/Logo.svg}
     depends_on:
@@ -101,7 +113,7 @@ services:
     restart: always
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.client.rule=Host(`local.test`) && PathPrefix(`/`)"
+      - "traefik.http.routers.client.rule=Host(`${TRAEFIK_HOST:-homelib.local}`) && PathPrefix(`/`)"
       - "traefik.http.routers.client.entrypoints=websecure"
       - "traefik.http.routers.client.tls=true"
       - "traefik.http.services.client.loadbalancer.server.port=3000"
@@ -118,8 +130,8 @@ services:
       - --entrypoints.traefik.address=:8080
       - --log.level=DEBUG
     ports:
-      - "8080:8080"
-      - "443:443"
+      - "${TRAEFIK_DASHBOARD_PORT:-8080}:8080"
+      - "${TRAEFIK_HTTPS_PORT:-443}:443"
     volumes:
       # Docker socket - automatically detects Docker or Podman
       # Docker (default): Uses /var/run/docker.sock
@@ -140,7 +152,7 @@ services:
       - ./server/backup.sh:/usr/local/bin/backup.sh
       - db_backups:/backups
     environment:
-      PGPASSWORD: password
+      PGPASSWORD: ${POSTGRES_PASSWORD:-password}
     depends_on:
       - postgres
     command: ["/usr/local/bin/backup.sh"]
