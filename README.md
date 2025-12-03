@@ -13,6 +13,7 @@ A modern, full-stack library management system built with **React**, **TypeScrip
 ## ✨ Features
 
 ### 📚 Core Library Management
+
 - **Book Management**: Add, edit, search books with ISBN lookup (Google Books/Open Library API)
 - **Member Management**: Track library members with contact information
 - **Loan System**: Automated 14-day loan periods with overdue tracking
@@ -20,6 +21,7 @@ A modern, full-stack library management system built with **React**, **TypeScrip
 - **Cover Images**: Upload and display book covers
 
 ### 🔐 Security & Authentication
+
 - JWT-based authentication with role-based access (Admin/Member)
 - Bcrypt password hashing with timing-attack protection
 - Rate limiting (5 req/15min for auth, 100 req/15min for API)
@@ -28,6 +30,7 @@ A modern, full-stack library management system built with **React**, **TypeScrip
 - CORS configuration for production security
 
 ### 📊 Admin Features
+
 - **Dashboard**: Real-time statistics (books, members, active loans, overdue)
 - **User Management**: Create and manage admin/member accounts
 - **Data Export**: CSV exports with date filters
@@ -35,6 +38,7 @@ A modern, full-stack library management system built with **React**, **TypeScrip
 - **System Info**: View configuration and database status
 
 ### 🎨 User Experience
+
 - **Responsive Design**: Mobile-first with Tailwind CSS v4
 - **Dark/Light Theme**: User preference saved to localStorage
 - **Smooth Animations**: Framer Motion for delightful interactions
@@ -43,6 +47,7 @@ A modern, full-stack library management system built with **React**, **TypeScrip
 - **User Onboarding**: Feature tour for new users
 
 ### ⚡ Performance & Quality
+
 - **Database Optimization**: 9 indexes for 10-100x query performance
 - **Optimized Queries**: Dashboard uses single query (75% faster)
 - **Connection Pool**: Tuned for production workloads
@@ -63,56 +68,72 @@ A modern, full-stack library management system built with **React**, **TypeScrip
 
 ### Option 1: Docker (Recommended)
 
-\`\`\`bash
+```bash
+
 # Clone the repository
-git clone https://github.com/pranavp1507/homeshelf.git
+
+git clone <https://github.com/pranavp1507/homeshelf.git>
 cd homeshelf
 
 # Start with Docker Compose
+
 docker-compose -f compose.dev.yml up -d
 
 # Access the application
-# Frontend: http://localhost:3000
-# Backend API: http://localhost:3001/api
-\`\`\`
+
+# Frontend: <http://localhost:3000>
+
+# Backend API: <http://localhost:3001/api>
+
+```
 
 First-time setup will prompt you to create an admin account.
 
 ### Option 2: Local Development
 
-\`\`\`bash
+```bash
+
 # 1. Clone and install dependencies
-git clone https://github.com/pranavp1507/homeshelf.git
+
+git clone <https://github.com/pranavp1507/homeshelf.git>
 cd homeshelf
 
 # Install server dependencies
+
 cd server
 pnpm install
 
 # Install client dependencies
+
 cd ../client
 pnpm install
 
 # 2. Setup PostgreSQL database
+
 createdb library
 
 # 3. Configure environment variables
+
 cd ../server
 cp .env.example .env
+
 # Edit .env with your database credentials and JWT secret
 
 # 4. Run database migrations
+
 pnpm run migrate up
 
 # 5. Start the backend server
-pnpm run dev  # Runs on http://localhost:3001
+
+pnpm run dev # Runs on <http://localhost:3001>
 
 # 6. Start the frontend (new terminal)
-cd ../client
-pnpm run dev  # Runs on http://localhost:3000
-\`\`\`
 
-Visit \`http://localhost:3000\` and create your admin account!
+cd ../client
+pnpm run dev # Runs on <http://localhost:3000>
+```
+
+Visit `http://localhost:3000\` and create your admin account!
 
 ---
 
@@ -130,6 +151,7 @@ Visit \`http://localhost:3000\` and create your admin account!
 ## 🛠️ Technology Stack
 
 ### Frontend
+
 - **React 19.0** + TypeScript
 - **Vite 7.2** - Lightning-fast build tool
 - **Tailwind CSS v4** - Utility-first styling
@@ -138,6 +160,7 @@ Visit \`http://localhost:3000\` and create your admin account!
 - **Playwright** - E2E testing
 
 ### Backend
+
 - **Node.js 24** + TypeScript
 - **Express 5.1** - Web framework
 - **PostgreSQL 16** - Relational database
@@ -146,6 +169,7 @@ Visit \`http://localhost:3000\` and create your admin account!
 - **Jest** + Supertest - Testing
 
 ### DevOps
+
 - **Docker** + Docker Compose - Containerization
 - **Traefik** - Reverse proxy with HTTPS
 - **k6** - Load testing
@@ -158,23 +182,29 @@ Visit \`http://localhost:3000\` and create your admin account!
 
 This project has comprehensive test coverage:
 
-\`\`\`bash
+```bash
+
 # Run all tests
+
 pnpm test:all
 
 # Client tests (160 tests)
+
 cd client && pnpm test
 
 # Server tests (326 tests)
+
 cd server && pnpm test
 
 # E2E tests (47 tests)
+
 pnpm test:e2e
 
 # Load testing
-cd server && pnpm test:smoke  # 30-second smoke test
-cd server && pnpm test:load   # 16-minute load test
-\`\`\`
+
+cd server && pnpm test:smoke # 30-second smoke test
+cd server && pnpm test:load # 16-minute load test
+```
 
 **Total Coverage**: 486 tests (100% passing) ✅
 
@@ -189,34 +219,45 @@ cd server && pnpm test:load   # 16-minute load test
 3. **Production** (\`compose.prod.yml\`) - Let's Encrypt SSL, build locally
 4. **GitHub Container Registry** (\`compose.ghcr.yml\`) - Pre-built images, no build needed! ⚡
 
-\`\`\`bash
+```bash
+
 # Production deployment (build locally)
+
 docker-compose -f compose.prod.yml up -d
 
 # Or use pre-built images from GitHub Container Registry
+
 cp .env.ghcr.example .env
+
 # Edit .env with your configuration
+
 docker-compose -f compose.ghcr.yml up -d
-\`\`\`
+```
 
 ### 📦 Using Pre-built Docker Images
 
 The easiest way to deploy HomeShelf is using pre-built images from GitHub Container Registry:
 
-\`\`\`bash
+```bash
+
 # 1. Copy and configure environment file
+
 cp .env.ghcr.example .env
+
 # Edit .env - set JWT_SECRET and database password
 
 # 2. Start the application
+
 docker-compose -f compose.ghcr.yml up -d
 
-# 3. Access at http://localhost:3000
-\`\`\`
+# 3. Access at <http://localhost:3000>
+
+```
 
 **Available Images:**
-- \`ghcr.io/pranavp1507/homeshelf-client:latest\` - React frontend
-- \`ghcr.io/pranavp1507/homeshelf-server:latest\` - Node.js backend
+
+- `ghcr.io/pranavp1507/homeshelf-client:latest` - React frontend
+- `ghcr.io/pranavp1507/homeshelf-server:latest` - Node.js backend
 
 Images are automatically built and published via GitHub Actions on every release.
 
@@ -224,32 +265,38 @@ Images are automatically built and published via GitHub Actions on every release
 
 ### Environment Variables
 
-Key environment variables to configure (see \`.env.ghcr.example\`):
+Key environment variables to configure (see `.env.ghcr.example`):
 
 **Required:**
-\`\`\`bash
-JWT_SECRET=your-super-secret-jwt-key-min-32-chars  # Generate with: openssl rand -hex 32
+
+```bash
+JWT_SECRET=your-super-secret-jwt-key-min-32-chars # Generate with: openssl rand -hex 32
 POSTGRES_PASSWORD=secure_database_password
-\`\`\`
+```
 
 **Optional:**
-\`\`\`bash
+
+```bash
+
 # Ports (host-side only, internal ports are fixed)
+
 CLIENT_PORT=3000
 SERVER_PORT=3001
 POSTGRES_PORT=5432
 
 # Google Books API for ISBN lookup
+
 GOOGLE_BOOKS_API_KEY=your-api-key
 
 # Email notifications (optional)
+
 ENABLE_EMAIL_NOTIFICATIONS=false
 SMTP_HOST=smtp.gmail.com
-SMTP_USER=your-email@gmail.com
+SMTP_USER=<your-email@gmail.com>
 SMTP_PASSWORD=your-app-password
-\`\`\`
+```
 
-See \`.env.ghcr.example\` for all available configuration options.
+See `.env.ghcr.example` for all available configuration options.
 
 ---
 
@@ -258,21 +305,24 @@ See \`.env.ghcr.example\` for all available configuration options.
 HomeShelf supports branding customization (library name and logo), but the method depends on your deployment approach:
 
 ### Option 1: Pre-built Images (No Customization)
-- **Method:** Use \`compose.ghcr.yml\`
+
+- **Method:** Use `compose.ghcr.yml`
 - **Branding:** Fixed as "HomeShelf" with default logo
 - **Best for:** Quick deployment, don't need custom branding
 
 ### Option 2: Local Build (Full Customization)
-- **Method:** Use \`compose.yml\` or \`compose.dev.yml\`
-- **Branding:** Fully customizable via \`.env\`
+
+- **Method:** Use `compose.yml` or `compose.dev.yml`
+- **Branding:** Fully customizable via `.env`
 - **Steps:**
-  1. Copy \`.env.example\` to \`.env\`
-  2. Set \`VITE_LIBRARY_NAME=Your Library\`
-  3. Set \`VITE_LIBRARY_LOGO=/your-logo.svg\`
-  4. Add logo to \`client/public/\`
-  5. Run \`docker-compose up --build\`
+  1. Copy `.env.example` to `.env`
+  2. Set `VITE_LIBRARY_NAME=Your Library`
+  3. Set `VITE_LIBRARY_LOGO=/your-logo.svg`
+  4. Add logo to `client/public/`
+  5. Run `docker-compose up --build`
 
 ### Option 3: Fork & Build Your Own Images
+
 - **Method:** Fork repository, configure GitHub Actions
 - **Branding:** Customizable via repository variables
 - **Best for:** Multiple deployments with same branding
@@ -285,14 +335,14 @@ HomeShelf supports branding customization (library name and logo), but the metho
 
 We welcome contributions! Please see our [Contributing Guide](./CONTRIBUTING.md) for details.
 
-### Quick Contribution Steps:
+### Quick Contribution Steps
 
 1. Fork the repository
-2. Create a feature branch (\`git checkout -b feature/amazing-feature\`)
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
 3. Make your changes with tests
-4. Run tests (\`pnpm test:all\`)
-5. Commit with conventional commits (\`git commit -m 'feat: add amazing feature'\`)
-6. Push to your fork (\`git push origin feature/amazing-feature\`)
+4. Run tests (`pnpm test:all`)
+5. Commit with conventional commits (`git commit -m 'feat: add amazing feature'`)
+6. Push to your fork (`git push origin feature/amazing-feature`)
 7. Open a Pull Request
 
 ---
@@ -332,4 +382,4 @@ This project is licensed under the **MIT License** - see the [LICENSE](./LICENSE
 
 ---
 
-**Made with ❤️ for libraries everywhere**
+### Made with ❤️ for libraries everywhere
