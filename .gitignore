@@ -20,8 +20,15 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Planning and session documents (kept locally, not published)
+# AI Agent related files
 GEMINI.md
+CLAUDE.md
+.claude/
+
+# General Docs
+filestructure.txt
+
+# Planning and session documents (kept locally, not published)
 docs/app_plan.md
 docs/app_status.md
 docs/implementation_roadmap.md
