@@ -220,25 +220,64 @@ docker-compose -f compose.ghcr.yml up -d
 
 Images are automatically built and published via GitHub Actions on every release.
 
+> **📝 Note on Branding:** Pre-built images use default "HomeShelf" branding. To customize the library name and logo, see [Customization Options](#-customization-options) below or refer to the [Customization Guide](docs/customization_guide.md).
+
 ### Environment Variables
 
-Key environment variables to configure:
+Key environment variables to configure (see \`.env.ghcr.example\`):
 
-**Server (.env)**:
+**Required:**
 \`\`\`bash
-DATABASE_URL=postgresql://user:password@localhost:5432/library
-JWT_SECRET=your-super-secret-jwt-key-min-32-chars
-GOOGLE_BOOKS_API_KEY=optional-for-isbn-lookup
+JWT_SECRET=your-super-secret-jwt-key-min-32-chars  # Generate with: openssl rand -hex 32
+POSTGRES_PASSWORD=secure_database_password
 \`\`\`
 
-**Client (.env)**:
+**Optional:**
 \`\`\`bash
-VITE_API_URL=http://localhost:3001
-VITE_LIBRARY_NAME=Your Library Name
-VITE_LIBRARY_LOGO=/logo.png
+# Ports (host-side only, internal ports are fixed)
+CLIENT_PORT=3000
+SERVER_PORT=3001
+POSTGRES_PORT=5432
+
+# Google Books API for ISBN lookup
+GOOGLE_BOOKS_API_KEY=your-api-key
+
+# Email notifications (optional)
+ENABLE_EMAIL_NOTIFICATIONS=false
+SMTP_HOST=smtp.gmail.com
+SMTP_USER=your-email@gmail.com
+SMTP_PASSWORD=your-app-password
 \`\`\`
 
-See \`.env.example\` files for all options.
+See \`.env.ghcr.example\` for all available configuration options.
+
+---
+
+## 🎨 Customization Options
+
+HomeShelf supports branding customization (library name and logo), but the method depends on your deployment approach:
+
+### Option 1: Pre-built Images (No Customization)
+- **Method:** Use \`compose.ghcr.yml\`
+- **Branding:** Fixed as "HomeShelf" with default logo
+- **Best for:** Quick deployment, don't need custom branding
+
+### Option 2: Local Build (Full Customization)
+- **Method:** Use \`compose.yml\` or \`compose.dev.yml\`
+- **Branding:** Fully customizable via \`.env\`
+- **Steps:**
+  1. Copy \`.env.example\` to \`.env\`
+  2. Set \`VITE_LIBRARY_NAME=Your Library\`
+  3. Set \`VITE_LIBRARY_LOGO=/your-logo.svg\`
+  4. Add logo to \`client/public/\`
+  5. Run \`docker-compose up --build\`
+
+### Option 3: Fork & Build Your Own Images
+- **Method:** Fork repository, configure GitHub Actions
+- **Branding:** Customizable via repository variables
+- **Best for:** Multiple deployments with same branding
+
+**For detailed instructions, see:** [Customization Guide](docs/customization_guide.md)
 
 ---
 

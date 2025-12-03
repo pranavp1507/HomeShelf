@@ -90,21 +90,11 @@ services:
       context: ./client
       dockerfile: Containerfile
       args:
-        # Pass build arguments for Vite (these are baked into the build)
+        # Build-time arguments (baked into JavaScript bundle)
+        # Set these in your .env file to customize branding
         VITE_API_URL: https://local.test/api
-        VITE_LIBRARY_NAME: "HomeShelf"
-        VITE_LIBRARY_LOGO: "/Logo.svg"
-    environment:
-      # API Configuration
-      # Development: http://localhost:3001/api
-      # Production with Traefik: https://your-domain.com/api
-      VITE_API_URL: https://local.test/api
-
-      # Library Branding
-      # Customize your library name and logo
-      VITE_LIBRARY_NAME: "Mulampuzha Library"
-      # Use a local path or external URL for the logo
-      VITE_LIBRARY_LOGO: "/Logo.svg"
+        VITE_LIBRARY_NAME: ${VITE_LIBRARY_NAME:-HomeShelf}
+        VITE_LIBRARY_LOGO: ${VITE_LIBRARY_LOGO:-/Logo.svg}
     depends_on:
       - server
       - traefik
