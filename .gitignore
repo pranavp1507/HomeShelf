@@ -13,6 +13,7 @@ server/uploads/
 
 # Traefik certificates (user-generated)
 traefik/certs/
+traefik/acme.json
 
 # IDEs and other tools
 .idea/

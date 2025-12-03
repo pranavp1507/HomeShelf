@@ -1,0 +1,14 @@
+# Let's Encrypt Certificate Storage
+#
+# This file will be automatically created and populated by Traefik
+# when using compose.prod.yml with Let's Encrypt.
+#
+# To create this file before starting:
+#   touch traefik/acme.json
+#   chmod 600 traefik/acme.json
+#
+# IMPORTANT:
+#   - This file MUST have 600 permissions (owner read/write only)
+#   - Traefik will refuse to start if permissions are incorrect
+#   - This file is gitignored and should never be committed
+#   - Contains private keys for your SSL certificates

@@ -247,8 +247,27 @@ docker-compose -f compose.yml up --build -d
 **For Production with Let's Encrypt:**
 
 ```bash
-# Configure domain in .env, then:
-docker-compose -f compose.prod.yml up -d
+# 1. Point your domain DNS to your server's public IP
+
+# 2. Copy and configure .env
+cp .env.example .env
+# Edit .env and set:
+#   - PRODUCTION_DOMAIN=your-domain.com
+#   - LETSENCRYPT_EMAIL=your-email@example.com
+#   - JWT_SECRET and POSTGRES_PASSWORD
+
+# 3. Create acme.json for Let's Encrypt
+touch traefik/acme.json
+chmod 600 traefik/acme.json
+
+# 4. Open firewall ports 80 and 443
+
+# 5. Start production deployment
+docker-compose -f compose.prod.yml up --build -d
+# Access: https://your-domain.com
+
+# Note: Test with staging first to avoid Let's Encrypt rate limits
+# Uncomment the staging CA server line in compose.prod.yml
 ```
 
 ### 📦 Using Pre-built Docker Images

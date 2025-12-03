@@ -118,6 +118,42 @@ docker-compose -f compose.ghcr.yml up -d
    # Access: https://homelib.local (accept browser warning for self-signed cert)
    ```
 
+   **Option C: Production with Let's Encrypt (real domain)**
+
+   a. Point your domain DNS A record to your server's public IP
+
+   b. Configure production environment:
+   ```env
+   # In your .env file:
+   PRODUCTION_DOMAIN=library.example.com
+   LETSENCRYPT_EMAIL=admin@example.com
+   ```
+
+   c. Create acme.json for Let's Encrypt:
+   ```bash
+   touch traefik/acme.json
+   chmod 600 traefik/acme.json
+   ```
+
+   d. Open firewall ports:
+   ```bash
+   # Open ports 80 (HTTP) and 443 (HTTPS)
+   # Example for UFW (Ubuntu):
+   sudo ufw allow 80/tcp
+   sudo ufw allow 443/tcp
+   ```
+
+   e. Start production deployment:
+   ```bash
+   # TESTING: First test with Let's Encrypt staging (avoids rate limits)
+   # Uncomment the staging CA server line in compose.prod.yml
+   docker-compose -f compose.prod.yml up --build -d
+
+   # PRODUCTION: After successful test, comment out staging line and restart
+   docker-compose -f compose.prod.yml up --build -d
+   # Access: https://your-domain.com (valid SSL certificate)
+   ```
+
 **Customizable via .env:**
 - ✅ Library name and logo (build-time)
 - ✅ All options from Option 1

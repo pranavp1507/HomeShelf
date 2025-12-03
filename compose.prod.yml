@@ -1,9 +1,145 @@
+# Docker Compose Configuration for Production (Let's Encrypt SSL)
+#
+# This configuration includes Traefik with automatic Let's Encrypt SSL certificates.
+# Suitable for production deployment with a real domain name.
+#
+# Setup:
+#   1. Point your domain DNS A record to your server's public IP
+#
+#   2. Copy .env.example to .env and configure:
+#      - PRODUCTION_DOMAIN (your real domain, e.g., library.example.com)
+#      - LETSENCRYPT_EMAIL (your email for Let's Encrypt notifications)
+#      - POSTGRES_PASSWORD (secure database password)
+#      - JWT_SECRET (generate with: openssl rand -hex 32)
+#      - Optional: Branding (VITE_LIBRARY_NAME, VITE_LIBRARY_LOGO)
+#
+#   3. Create acme.json for Let's Encrypt:
+#      touch traefik/acme.json
+#      chmod 600 traefik/acme.json
+#
+#   4. Open firewall ports:
+#      - 80 (HTTP, redirects to HTTPS)
+#      - 443 (HTTPS)
+#      - Optional: 8080 (Traefik Dashboard, if enabled)
+#
+# Usage:
+#   docker-compose -f compose.prod.yml up --build -d
+#   # Access: https://your-domain.com
+#
+# Important:
+#   - Let's Encrypt has rate limits (5 certificates per domain per week)
+#   - Test with staging first by uncommenting the staging CA server line
+#   - Requires valid domain pointing to your server
+#   - Port 80 must be accessible for Let's Encrypt HTTP challenge
+#
+
 services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: library
+      POSTGRES_USER: ${POSTGRES_USER:-library_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-library_user} -d library"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      # Server Configuration
+      NODE_ENV: production
+      PORT: 3001
+
+      # Database Configuration
+      DATABASE_URL: postgres://${POSTGRES_USER:-library_user}:${POSTGRES_PASSWORD}@postgres:5432/library
+
+      # JWT Secret - REQUIRED in production
+      JWT_SECRET: ${JWT_SECRET}
+
+      # Google Books API (Optional)
+      GOOGLE_BOOKS_API_KEY: ${GOOGLE_BOOKS_API_KEY:-}
+
+      # Client URL (for CORS) - Uses production domain
+      CLIENT_URL: https://${PRODUCTION_DOMAIN}
+
+      # Email/SMTP Configuration (Optional)
+      ENABLE_EMAIL_NOTIFICATIONS: ${ENABLE_EMAIL_NOTIFICATIONS:-false}
+      SMTP_HOST: ${SMTP_HOST:-smtp.gmail.com}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_SECURE: ${SMTP_SECURE:-false}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-library@example.com}
+
+      # Overdue Notifications
+      ENABLE_OVERDUE_CHECKS: ${ENABLE_OVERDUE_CHECKS:-true}
+      OVERDUE_CHECK_INTERVAL: ${OVERDUE_CHECK_INTERVAL:-60}
+
+      # Error Monitoring (Optional - Sentry)
+      SENTRY_DSN: ${SENTRY_DSN:-}
+      SENTRY_RELEASE: ${SENTRY_RELEASE:-}
+    volumes:
+      - uploads_data:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3001/', (r) => process.exit(r.statusCode === 200 ? 0 : 1))"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 40s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.server.rule=Host(`${PRODUCTION_DOMAIN}`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.server.entrypoints=websecure"
+      - "traefik.http.routers.server.tls.certresolver=letsencrypt"
+      - "traefik.http.services.server.loadbalancer.server.port=3001"
+
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+      args:
+        # Build-time arguments (baked into JavaScript bundle)
+        VITE_API_URL: https://${PRODUCTION_DOMAIN}/api
+        VITE_LIBRARY_NAME: ${VITE_LIBRARY_NAME:-HomeShelf}
+        VITE_LIBRARY_LOGO: ${VITE_LIBRARY_LOGO:-/Logo.svg}
+    restart: unless-stopped
+    depends_on:
+      - server
+      - traefik
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.client.rule=Host(`${PRODUCTION_DOMAIN}`)"
+      - "traefik.http.routers.client.entrypoints=websecure"
+      - "traefik.http.routers.client.tls.certresolver=letsencrypt"
+      - "traefik.http.services.client.loadbalancer.server.port=3000"
+
   traefik:
-    image: traefik:@latest
+    image: traefik:v3.6
     container_name: traefik
+    restart: unless-stopped
     command:
-      - --api.dashboard=true
+      # Dashboard
+      - --api.dashboard=${TRAEFIK_DASHBOARD_ENABLED:-false}
+
+      # Docker provider
       - --providers.docker=true
       - --providers.docker.exposedbydefault=false
 
@@ -11,107 +147,55 @@ services:
       - --entrypoints.web.address=:80
       - --entrypoints.web.http.redirections.entrypoint.to=websecure
       - --entrypoints.web.http.redirections.entrypoint.scheme=https
-
       - --entrypoints.websecure.address=:443
+      - --entrypoints.traefik.address=:8080
 
-      # Enable HTTPS using Let's Encrypt
-      - --certificatesresolvers.mytlschallenge.acme.tlschallenge=true
-      - --certificatesresolvers.mytlschallenge.acme.email=admin@myapp.example.com
-      - --certificatesresolvers.mytlschallenge.acme.storage=/etc/traefik/acme.json
-      # OPTIONAL: use staging (uncomment for testing only)
-      # - --certificatesresolvers.mytlschallenge.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory
+      # Let's Encrypt Certificate Resolver
+      - --certificatesresolvers.letsencrypt.acme.tlschallenge=true
+      - --certificatesresolvers.letsencrypt.acme.email=${LETSENCRYPT_EMAIL}
+      - --certificatesresolvers.letsencrypt.acme.storage=/etc/traefik/acme.json
+      # TESTING: Uncomment to use Let's Encrypt staging (avoids rate limits)
+      # - --certificatesresolvers.letsencrypt.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory
 
-      - --log.level=INFO
+      # Logging
+      - --log.level=${TRAEFIK_LOG_LEVEL:-INFO}
+      - --accesslog=true
     ports:
       - "80:80"
       - "443:443"
-      - "8080:8080"  # Dashboard
+      - "${TRAEFIK_DASHBOARD_PORT:-8080}:8080"  # Dashboard (only if enabled)
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
+      # Docker socket
+      - ${DOCKER_SOCKET:-/var/run/docker.sock}:/var/run/docker.sock:ro
+      # Let's Encrypt certificate storage
       - ./traefik/acme.json:/etc/traefik/acme.json
-    restart: unless-stopped
-
-  server:
-    image: myapp/server:latest
-    environment:
-      # Server Configuration
-      NODE_ENV: production
-      PORT: 3001
-
-      # Database Configuration
-      DATABASE_URL: postgres://user:password@postgres:5432/library
-
-      # JWT Secret - IMPORTANT: Change this in production!
-      # Generate one using: openssl rand -hex 32
-      JWT_SECRET: "CHANGE_THIS_IN_PRODUCTION"
-
-      # Google Books API (Optional)
-      # Get your API key from: https://console.cloud.google.com/apis/credentials
-      GOOGLE_BOOKS_API_KEY: ""
-
-      # Client URL (for CORS)
-      CLIENT_URL: "https://myapp.example.com"
-
-      # Email/SMTP Configuration (Optional)
-      # Set to 'true' to enable email notifications
-      ENABLE_EMAIL_NOTIFICATIONS: "false"
-      SMTP_HOST: "smtp.gmail.com"
-      SMTP_PORT: "587"
-      SMTP_SECURE: "false"
-      SMTP_USER: ""
-      SMTP_PASSWORD: ""
-      SMTP_FROM: "library@example.com"
-
-      # Overdue Notifications
-      # Set to 'false' to disable overdue checks
-      ENABLE_OVERDUE_CHECKS: "true"
-      OVERDUE_CHECK_INTERVAL: "60"
-    volumes:
-      - uploads_data:/app/uploads
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.server.rule=Host(`myapp.example.com`) && PathPrefix(`/api`)"
-      - "traefik.http.routers.server.entrypoints=websecure"
-      - "traefik.http.routers.server.tls.certresolver=mytlschallenge"
-      - "traefik.http.services.server.loadbalancer.server.port=3001"
+      # Dashboard access (only if TRAEFIK_DASHBOARD_ENABLED=true)
+      - "traefik.enable=${TRAEFIK_DASHBOARD_ENABLED:-false}"
+      - "traefik.http.routers.dashboard.rule=Host(`${PRODUCTION_DOMAIN}`) && (PathPrefix(`/api`) || PathPrefix(`/dashboard`))"
+      - "traefik.http.routers.dashboard.entrypoints=traefik"
+      - "traefik.http.routers.dashboard.service=api@internal"
+      # Basic auth for dashboard (generate with: htpasswd -nb admin password)
+      - "traefik.http.routers.dashboard.middlewares=dashboard-auth"
+      - "traefik.http.middlewares.dashboard-auth.basicauth.users=${TRAEFIK_DASHBOARD_AUTH:-admin:$$apr1$$8EVjn/nj$$GiLUZqcbueTFeD23SuB6x0}"
+
+  backup:
+    image: postgres:16-alpine
+    container_name: db_backup_job
+    volumes:
+      - ./server/backup.sh:/usr/local/bin/backup.sh
+      - db_backups:/backups
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_USER: ${POSTGRES_USER:-library_user}
     depends_on:
       - postgres
-    restart: unless-stopped
-
-  client:
-    image: myapp/client:latest
-    environment:
-      # API Configuration
-      # Change to your domain: https://your-domain.com/api
-      VITE_API_URL: "https://myapp.example.com/api"
-
-      # Library Branding
-      # Customize your library name and logo
-      VITE_LIBRARY_NAME: "My Library"
-      # Use a local path or external URL for the logo
-      VITE_LIBRARY_LOGO: "/Logo.svg"
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.client.rule=Host(`myapp.example.com`)"
-      - "traefik.http.routers.client.entrypoints=websecure"
-      - "traefik.http.routers.client.tls.certresolver=mytlschallenge"
-      - "traefik.http.services.client.loadbalancer.server.port=3000"
-    depends_on:
-      - server
-      - traefik
-    restart: unless-stopped
-
-  postgres:
-    image: postgres:16
-    environment:
-      POSTGRES_DB: library
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    restart: unless-stopped
+    command: ["/usr/local/bin/backup.sh"]
 
 volumes:
   postgres_data:
+    driver: local
   uploads_data:
+    driver: local
   db_backups:
+    driver: local
