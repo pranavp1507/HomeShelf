@@ -149,6 +149,12 @@ const BookForm = ({ open, onClose, onSubmit, bookToEdit }: BookFormProps) => {
             const errorData = await response.json();
             throw new Error(errorData.error || 'Failed to upload cover image');
           }
+
+          // Get the updated book with new cover path and update preview
+          const updatedBook = await response.json();
+          if (updatedBook.cover_image_path) {
+            setCoverPreview(`${config.apiUrl.replace('/api', '')}${updatedBook.cover_image_path}`);
+          }
         } else if (book.cover_image_path === undefined && bookToEdit?.cover_image_path) {
           const response = await fetch(`${config.apiUrl}/books/${submittedBook.id}`, {
             method: 'PUT',

@@ -267,6 +267,8 @@ function App() {
   const handleBookCloseForm = () => {
     setIsBookFormOpen(false);
     setBookToEdit(null);
+    // Refetch books to show any cover images uploaded after form submission
+    fetchBooks();
   };
 
   const handleBookFormSubmit = async (bookData: Partial<Book>) => {
