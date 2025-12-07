@@ -223,17 +223,31 @@ router.put('/:id', authUtils.authenticateToken, validateBook, asyncHandler(async
   try {
     await client.query('BEGIN');
 
+    // Get the old book data to check for old cover image
+    const { rows: oldBookRows } = await client.query<Book>('SELECT cover_image_path FROM books WHERE id = $1', [id]);
+
+    if (oldBookRows.length === 0) {
+      await client.query('ROLLBACK');
+      throw new AppError('Book not found', 404);
+    }
+
+    const oldCoverPath = oldBookRows[0].cover_image_path;
+
     const { rows } = await client.query<Book>(
       'UPDATE books SET title = $1, author = $2, isbn = $3, available = $4, cover_image_path = $5 WHERE id = $6 RETURNING *',
       [title, author, isbn || null, available !== undefined ? available : true, cover_image_path || null, id]
     );
 
-    if (rows.length === 0) {
-      await client.query('ROLLBACK');
-      throw new AppError('Book not found', 404);
-    }
-
     const updatedBook = rows[0];
+
+    // Delete old cover image file if it was removed or changed
+    if (oldCoverPath && oldCoverPath !== cover_image_path) {
+      const filePath = path.join(uploadsDir, path.basename(oldCoverPath));
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+        console.log(`Deleted old cover image: ${filePath}`);
+      }
+    }
 
     // Update categories
     await client.query('DELETE FROM book_categories WHERE book_id = $1', [id]);
@@ -261,10 +275,26 @@ router.put('/:id', authUtils.authenticateToken, validateBook, asyncHandler(async
 router.delete('/:id', authUtils.authenticateToken, asyncHandler(async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
 
+  // Get the book to check if it has a cover image
+  const { rows: bookRows } = await query<Book>('SELECT cover_image_path FROM books WHERE id = $1', [id]);
+
+  if (bookRows.length === 0) {
+    throw new AppError('Book not found', 404);
+  }
+
   const { rowCount } = await query('DELETE FROM books WHERE id = $1', [id]);
 
   if (!rowCount || rowCount === 0) {
     throw new AppError('Book not found', 404);
+  }
+
+  // Delete the cover image file if it exists
+  if (bookRows[0].cover_image_path) {
+    const filePath = path.join(uploadsDir, path.basename(bookRows[0].cover_image_path));
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+      console.log(`Deleted cover image: ${filePath}`);
+    }
   }
 
   res.status(204).send();
@@ -429,6 +459,19 @@ router.post('/:id/cover',
       throw new AppError('No file uploaded', 400);
     }
 
+    // Get the old cover path before updating
+    const { rows: oldBookRows } = await query<Book>('SELECT cover_image_path FROM books WHERE id = $1', [id]);
+
+    if (oldBookRows.length === 0) {
+      // Delete the newly uploaded file since book doesn't exist
+      const uploadedFilePath = path.join(uploadsDir, req.file.filename);
+      if (fs.existsSync(uploadedFilePath)) {
+        fs.unlinkSync(uploadedFilePath);
+      }
+      throw new AppError('Book not found', 404);
+    }
+
+    const oldCoverPath = oldBookRows[0].cover_image_path;
     const cover_image_path = `/uploads/${req.file.filename}`;
 
     const { rows } = await query<Book>(
@@ -436,8 +479,13 @@ router.post('/:id/cover',
       [cover_image_path, id]
     );
 
-    if (rows.length === 0) {
-      throw new AppError('Book not found', 404);
+    // Delete old cover image file if it exists
+    if (oldCoverPath) {
+      const filePath = path.join(uploadsDir, path.basename(oldCoverPath));
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+        console.log(`Deleted old cover image: ${filePath}`);
+      }
     }
 
     res.json(rows[0]);
