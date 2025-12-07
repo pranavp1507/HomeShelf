@@ -33,6 +33,13 @@ const app = express();
 const port = config.port;
 
 // ========================================
+// Trust Proxy Configuration
+// ========================================
+// Enable trust proxy when behind reverse proxy (Traefik, nginx, etc.)
+// This allows Express to correctly identify client IPs from X-Forwarded-For headers
+app.set('trust proxy', 1); // Trust first proxy
+
+// ========================================
 // CORS Configuration
 // ========================================
 const corsOptions: cors.CorsOptions = {

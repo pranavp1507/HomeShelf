@@ -276,15 +276,32 @@ router.post('/bulk-import', authUtils.authenticateToken, csvUpload.single('file'
     throw new AppError('CSV file is required', 400);
   }
 
+  // Log file details for debugging
+  console.log('CSV Upload Details:', {
+    filename: req.file.originalname,
+    mimetype: req.file.mimetype,
+    size: req.file.size,
+    bufferLength: req.file.buffer?.length,
+  });
+
   let records: any[];
   try {
     records = parse(req.file.buffer, {
       columns: true,
       skip_empty_lines: true,
       trim: true,
+      bom: true, // Handle UTF-8 BOM (Byte Order Mark) from Excel
+      relax_column_count: true, // Allow rows with different column counts
+      skip_records_with_error: true, // Skip malformed rows instead of failing
     });
-  } catch {
-    throw new AppError('Invalid CSV file format', 400);
+    console.log(`Parsed ${records.length} records from CSV`);
+  } catch (error) {
+    console.error('CSV Parse Error:', error);
+    throw new AppError(`Invalid CSV file format: ${error instanceof Error ? error.message : 'Unknown error'}`, 400);
+  }
+
+  if (!records || records.length === 0) {
+    throw new AppError('CSV file is empty or contains no valid data rows', 400);
   }
 
   const importedBooks: any[] = [];
@@ -295,7 +312,7 @@ router.post('/bulk-import', authUtils.authenticateToken, csvUpload.single('file'
     await client.query('BEGIN');
 
     for (const [index, record] of records.entries()) {
-      const { title, author, isbn, cover_image_path } = record;
+      const { title, author, isbn, cover_image_path, cover_image_url, categories } = record;
 
       if (!title || !author) {
         errors.push(`Row ${index + 1}: Missing required field (title/author)`);
@@ -304,22 +321,27 @@ router.post('/bulk-import', authUtils.authenticateToken, csvUpload.single('file'
 
       let finalCoverPath: string | null = cover_image_path || null;
 
-      // If cover image is a URL → download
-      if (cover_image_path && /^https?:\/\/.+/i.test(cover_image_path)) {
+      // If cover_image_url is provided, download it
+      const coverUrl = cover_image_url || cover_image_path;
+      if (coverUrl && /^https?:\/\/.+/i.test(coverUrl)) {
         try {
-          const imageResponse = await axios.get(cover_image_path, { responseType: 'arraybuffer' });
+          const imageResponse = await axios.get(coverUrl, {
+            responseType: 'arraybuffer',
+            timeout: 10000, // 10 second timeout
+          });
 
-          const fileExt = path.extname(new URL(cover_image_path).pathname) || '.jpg';
+          const fileExt = path.extname(new URL(coverUrl).pathname) || '.jpg';
           finalCoverPath = `/uploads/${uuidv4()}${fileExt}`;
           const savePath = path.join(uploadsDir, path.basename(finalCoverPath));
 
           fs.writeFileSync(savePath, imageResponse.data);
-        } catch {
-          errors.push(`Row ${index + 1}: Failed to download cover image from URL`);
+        } catch (err) {
+          errors.push(`Row ${index + 1}: Failed to download cover image from URL - ${err instanceof Error ? err.message : 'Unknown error'}`);
+          finalCoverPath = null;
         }
       }
 
-      // Try inserting record
+      // Try inserting book record
       try {
         const result = await client.query<{ id: number }>(
           `INSERT INTO books (title, author, isbn, cover_image_path)
@@ -330,7 +352,43 @@ router.post('/bulk-import', authUtils.authenticateToken, csvUpload.single('file'
         );
 
         if (result.rows.length) {
+          const bookId = result.rows[0].id;
           importedBooks.push(result.rows[0]);
+
+          // Handle categories if provided (comma-separated)
+          if (categories && typeof categories === 'string' && categories.trim()) {
+            const categoryNames = categories.split(',').map((c: string) => c.trim()).filter(Boolean);
+
+            for (const categoryName of categoryNames) {
+              try {
+                // Get or create category
+                let categoryId: number;
+                const existingCategory = await client.query<{ id: number }>(
+                  'SELECT id FROM categories WHERE LOWER(name) = LOWER($1)',
+                  [categoryName]
+                );
+
+                if (existingCategory.rows.length > 0) {
+                  categoryId = existingCategory.rows[0].id;
+                } else {
+                  // Create new category
+                  const newCategory = await client.query<{ id: number }>(
+                    'INSERT INTO categories (name) VALUES ($1) RETURNING id',
+                    [categoryName]
+                  );
+                  categoryId = newCategory.rows[0].id;
+                }
+
+                // Associate category with book
+                await client.query(
+                  'INSERT INTO book_categories (book_id, category_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
+                  [bookId, categoryId]
+                );
+              } catch (catErr: any) {
+                errors.push(`Row ${index + 1}: Failed to add category '${categoryName}' - ${catErr.message}`);
+              }
+            }
+          }
         } else {
           errors.push(`Row ${index + 1}: Duplicate ISBN (${isbn})`);
         }

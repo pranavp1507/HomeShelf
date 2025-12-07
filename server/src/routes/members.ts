@@ -147,15 +147,32 @@ router.post('/bulk-import',
       throw new AppError('CSV file is required', 400);
     }
 
+    // Log file details for debugging
+    console.log('CSV Upload Details:', {
+      filename: req.file.originalname,
+      mimetype: req.file.mimetype,
+      size: req.file.size,
+      bufferLength: req.file.buffer?.length,
+    });
+
     let records: any[];
     try {
       records = parse(req.file.buffer, {
         columns: true,
         skip_empty_lines: true,
         trim: true,
+        bom: true, // Handle UTF-8 BOM (Byte Order Mark) from Excel
+        relax_column_count: true, // Allow rows with different column counts
+        skip_records_with_error: true, // Skip malformed rows instead of failing
       });
-    } catch {
-      throw new AppError('Invalid CSV file format', 400);
+      console.log(`Parsed ${records.length} records from CSV`);
+    } catch (error) {
+      console.error('CSV Parse Error:', error);
+      throw new AppError(`Invalid CSV file format: ${error instanceof Error ? error.message : 'Unknown error'}`, 400);
+    }
+
+    if (!records || records.length === 0) {
+      throw new AppError('CSV file is empty or contains no valid data rows', 400);
     }
 
     const importedMembers: Member[] = [];

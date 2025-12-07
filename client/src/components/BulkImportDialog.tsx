@@ -35,13 +35,13 @@ const BulkImportDialog = ({
   };
 
   const handleDownloadTemplate = () => {
-    const csvContent = "title,author,isbn\n";
+    const csvContent = "title,author,isbn,categories,cover_image_url\n";
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement("a");
     if (link.download !== undefined) {
       const url = URL.createObjectURL(blob);
       link.setAttribute("href", url);
-      link.setAttribute("download", "mulampuzha_books_template.csv");
+      link.setAttribute("download", "books_template.csv");
       link.style.visibility = 'hidden';
       document.body.appendChild(link);
       link.click();
@@ -102,10 +102,15 @@ const BulkImportDialog = ({
       <div className="space-y-6">
         {/* Instructions */}
         <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-          <p className="text-sm text-blue-800 dark:text-blue-300">
-            Download the template, fill in your book details, and upload the CSV file.
-            Only 'title', 'author', and 'isbn' columns will be processed.
-          </p>
+          <div className="text-sm text-blue-800 dark:text-blue-300 space-y-2">
+            <p>Download the template, fill in your book details, and upload the CSV file.</p>
+            <ul className="list-disc list-inside space-y-1 ml-2">
+              <li><strong>title</strong> and <strong>author</strong> are required</li>
+              <li><strong>isbn</strong> is optional (used for duplicate detection)</li>
+              <li><strong>categories</strong> is optional (comma-separated, e.g., "Fiction, Mystery")</li>
+              <li><strong>cover_image_url</strong> is optional (URL to download cover image)</li>
+            </ul>
+          </div>
         </div>
 
         {/* Download Template Section */}
