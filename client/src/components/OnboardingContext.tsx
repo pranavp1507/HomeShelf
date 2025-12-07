@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useMemo, type ReactNode } from 'react';
 
 interface OnboardingContextType {
   showWelcome: boolean;
@@ -39,61 +39,78 @@ export const OnboardingProvider = ({ children }: OnboardingProviderProps) => {
     // Welcome and tour will be triggered by App.tsx when appropriate
   }, []);
 
-  const startWelcome = () => {
+  const startWelcome = useCallback(() => {
     setShowWelcome(true);
-  };
+  }, []);
 
-  const completeWelcome = () => {
+  const completeWelcome = useCallback(() => {
     setShowWelcome(false);
     localStorage.setItem('onboarding_welcome_completed', 'true');
     // Optionally start tour after welcome
     // For now, we'll let user trigger it manually or skip
-  };
+  }, []);
 
-  const startTour = () => {
+  const startTour = useCallback(() => {
     setShowTour(true);
     setCurrentTourStep(0);
-  };
+  }, []);
 
-  const completeTour = () => {
+  const completeTour = useCallback(() => {
     setShowTour(false);
     setCurrentTourStep(0);
     localStorage.setItem('onboarding_tour_completed', 'true');
-  };
+  }, []);
 
-  const nextTourStep = () => {
+  const nextTourStep = useCallback(() => {
     setCurrentTourStep((prev) => prev + 1);
-  };
+  }, []);
 
-  const prevTourStep = () => {
+  const prevTourStep = useCallback(() => {
     setCurrentTourStep((prev) => Math.max(0, prev - 1));
-  };
+  }, []);
 
-  const skipTour = () => {
-    completeTour();
-  };
+  const skipTour = useCallback(() => {
+    setShowTour(false);
+    setCurrentTourStep(0);
+    localStorage.setItem('onboarding_tour_completed', 'true');
+  }, []);
 
-  const resetOnboarding = () => {
+  const resetOnboarding = useCallback(() => {
     localStorage.removeItem('onboarding_welcome_completed');
     localStorage.removeItem('onboarding_tour_completed');
     setShowWelcome(false);
     setShowTour(false);
     setCurrentTourStep(0);
-  };
+  }, []);
 
-  const value: OnboardingContextType = {
-    showWelcome,
-    showTour,
-    currentTourStep,
-    startWelcome,
-    completeWelcome,
-    startTour,
-    completeTour,
-    nextTourStep,
-    prevTourStep,
-    skipTour,
-    resetOnboarding,
-  };
+  const value: OnboardingContextType = useMemo(
+    () => ({
+      showWelcome,
+      showTour,
+      currentTourStep,
+      startWelcome,
+      completeWelcome,
+      startTour,
+      completeTour,
+      nextTourStep,
+      prevTourStep,
+      skipTour,
+      resetOnboarding,
+    }),
+    [
+      showWelcome,
+      showTour,
+      currentTourStep,
+      startWelcome,
+      completeWelcome,
+      startTour,
+      completeTour,
+      nextTourStep,
+      prevTourStep,
+      skipTour,
+      resetOnboarding,
+    ]
+  );
 
   return <OnboardingContext.Provider value={value}>{children}</OnboardingContext.Provider>;
 };

@@ -430,27 +430,30 @@ function App() {
                   element={
                     <ProtectedRoute>
                       <div>
-                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
-                          <div className="flex flex-col sm:flex-row gap-4 flex-1">
-                            <Input
-                              label="Search Books"
-                              value={bookSearchQuery}
-                              onChange={(e) => setBookSearchQuery(e.target.value)}
-                              placeholder="Search by title, author, or ISBN"
-                              className="sm:min-w-[200px]"
-                            />
-                            <Select
-                              label="Availability"
-                              value={availableStatusFilter}
-                              onChange={(e) => setAvailableStatusFilter(e.target.value)}
-                              options={[
-                                { value: 'all', label: 'All' },
-                                { value: 'true', label: 'Available' },
-                                { value: 'false', label: 'Borrowed' }
-                              ]}
-                              className="sm:min-w-[150px]"
-                            />
-                            <div className="sm:min-w-[250px]">
+                        <div className="flex flex-col gap-4 mb-6">
+                          {/* Filters Row */}
+                          <div className="flex flex-col sm:flex-row gap-4">
+                            <div className="flex-1">
+                              <Input
+                                label="Search Books"
+                                value={bookSearchQuery}
+                                onChange={(e) => setBookSearchQuery(e.target.value)}
+                                placeholder="Search by title, author, or ISBN"
+                              />
+                            </div>
+                            <div className="w-full sm:w-auto sm:min-w-[150px]">
+                              <Select
+                                label="Availability"
+                                value={availableStatusFilter}
+                                onChange={(e) => setAvailableStatusFilter(e.target.value)}
+                                options={[
+                                  { value: 'all', label: 'All' },
+                                  { value: 'true', label: 'Available' },
+                                  { value: 'false', label: 'Borrowed' }
+                                ]}
+                              />
+                            </div>
+                            <div className="w-full sm:w-auto sm:min-w-[200px]">
                               <MultiSelect
                                 label="Filter by Categories"
                                 options={allCategories}
@@ -461,22 +464,25 @@ function App() {
                               />
                             </div>
                           </div>
-                          <div className="flex gap-2 w-full sm:w-auto">
+                          {/* Actions Row */}
+                          <div className="flex gap-2">
                             <Button
                               variant="primary"
                               icon={<Plus className="h-5 w-5" />}
                               onClick={() => handleBookOpenForm()}
-                              fullWidth
+                              className="flex-1 sm:flex-initial"
                             >
-                              Add New Book
+                              <span className="hidden xs:inline">Add New Book</span>
+                              <span className="xs:hidden">Add Book</span>
                             </Button>
                             <Button
                               variant="secondary"
                               icon={<Upload className="h-5 w-5" />}
                               onClick={() => setIsBulkImportOpen(true)}
-                              fullWidth
+                              className="flex-1 sm:flex-initial"
                             >
-                              Bulk Import
+                              <span className="hidden xs:inline">Bulk Import</span>
+                              <span className="xs:hidden">Import</span>
                             </Button>
                           </div>
                         </div>
@@ -513,33 +519,38 @@ function App() {
                   element={
                     <ProtectedRoute>
                       <div>
-                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
-                          <Input
-                            label="Search members"
-                            value={memberSearchQuery}
-                            onChange={(e) => {
-                              setMemberSearchQuery(e.target.value);
-                              setMemberPage(1);
-                            }}
-                            placeholder="Search by name, email, or phone"
-                            className="flex-1 sm:min-w-[300px]"
-                          />
-                          <div className="flex gap-2 w-full sm:w-auto">
+                        <div className="flex flex-col gap-4 mb-6">
+                          {/* Search Row */}
+                          <div>
+                            <Input
+                              label="Search members"
+                              value={memberSearchQuery}
+                              onChange={(e) => {
+                                setMemberSearchQuery(e.target.value);
+                                setMemberPage(1);
+                              }}
+                              placeholder="Search by name, email, or phone"
+                            />
+                          </div>
+                          {/* Actions Row */}
+                          <div className="flex gap-2">
                             <Button
                               variant="primary"
                               icon={<Plus className="h-5 w-5" />}
                               onClick={() => handleMemberOpenForm()}
-                              fullWidth
+                              className="flex-1 sm:flex-initial"
                             >
-                              Add New Member
+                              <span className="hidden xs:inline">Add New Member</span>
+                              <span className="xs:hidden">Add Member</span>
                             </Button>
                             <Button
                               variant="secondary"
                               icon={<Upload className="h-5 w-5" />}
                               onClick={() => setIsMemberBulkImportOpen(true)}
-                              fullWidth
+                              className="flex-1 sm:flex-initial"
                             >
-                              Bulk Import
+                              <span className="hidden xs:inline">Bulk Import</span>
+                              <span className="xs:hidden">Import</span>
                             </Button>
                           </div>
                         </div>

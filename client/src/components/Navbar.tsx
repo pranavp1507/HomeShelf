@@ -38,8 +38,8 @@ const Navbar = ({ toggleColorMode, currentMode }: NavbarProps) => {
 
   useEffect(() => {
     const checkMobile = () => {
-      // Show hamburger menu on screens smaller than 1024px (lg breakpoint)
-      setIsMobile(window.innerWidth < 1024);
+      // Show hamburger menu on screens smaller than 1280px (xl breakpoint)
+      setIsMobile(window.innerWidth < 1280);
     };
 
     checkMobile();

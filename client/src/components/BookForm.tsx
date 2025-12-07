@@ -110,7 +110,7 @@ const BookForm = ({ open, onClose, onSubmit, bookToEdit }: BookFormProps) => {
       setCoverPreview(URL.createObjectURL(file));
     } else {
       setCoverFile(null);
-      setCoverPreview(bookToEdit?.cover_image_path ? `${config.apiUrl}${bookToEdit.cover_image_path}` : null);
+      setCoverPreview(bookToEdit?.cover_image_path ? `${config.apiUrl.replace('/api', '')}${bookToEdit.cover_image_path}` : null);
     }
   };
 

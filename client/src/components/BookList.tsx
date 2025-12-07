@@ -141,7 +141,7 @@ const BookList = ({ books, onEdit, onDelete, onAdd, sortBy, sortOrder, onSortCha
                   <td className="px-4 py-3">
                     {book.cover_image_path ? (
                       <img
-                        src={`${config.apiUrl}${book.cover_image_path}`}
+                        src={`${config.apiUrl.replace('/api', '')}${book.cover_image_path}`}
                         alt={`Cover of ${book.title}`}
                         className="w-12 h-12 object-cover rounded"
                       />

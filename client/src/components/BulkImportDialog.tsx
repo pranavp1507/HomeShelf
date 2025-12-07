@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { config } from '../config';
 import { Download, Upload, FileText } from 'lucide-react';
 import { Modal, Button } from './ui';
+import { useAuth } from './AuthContext';
 
 interface BulkImportDialogProps {
   open: boolean;
@@ -21,6 +22,7 @@ const BulkImportDialog = ({
   onImportSuccess,
   setNotification,
 }: BulkImportDialogProps) => {
+  const { token } = useAuth();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
 
@@ -62,6 +64,9 @@ const BulkImportDialog = ({
     try {
       const response = await fetch(`${config.apiUrl}/books/bulk-import`, {
         method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
         body: formData,
       });
 

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { config } from '../config';
 import { Download, Upload, FileText } from 'lucide-react';
 import { Modal, Button } from './ui';
+import { useAuth } from './AuthContext';
 
 interface MemberBulkImportDialogProps {
   open: boolean;
@@ -21,6 +22,7 @@ const MemberBulkImportDialog = ({
   onImportSuccess,
   setNotification,
 }: MemberBulkImportDialogProps) => {
+  const { token } = useAuth();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
 
@@ -60,7 +62,6 @@ const MemberBulkImportDialog = ({
     formData.append('file', selectedFile);
 
     try {
-      const token = localStorage.getItem('token');
       const response = await fetch(`${config.apiUrl}/members/bulk-import`, {
         method: 'POST',
         headers: {
