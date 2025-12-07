@@ -92,7 +92,7 @@ services:
     restart: always
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.server.rule=Host(`${TRAEFIK_HOST:-homelib.local}`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.server.rule=Host(`${TRAEFIK_HOST:-homelib.local}`) && (PathPrefix(`/api`) || PathPrefix(`/uploads`))"
       - "traefik.http.routers.server.entrypoints=websecure"
       - "traefik.http.routers.server.tls=true"
       - "traefik.http.services.server.loadbalancer.server.port=3001"

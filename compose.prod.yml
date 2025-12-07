@@ -100,7 +100,7 @@ services:
       start_period: 40s
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.server.rule=Host(`${PRODUCTION_DOMAIN}`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.server.rule=Host(`${PRODUCTION_DOMAIN}`) && (PathPrefix(`/api`) || PathPrefix(`/uploads`))"
       - "traefik.http.routers.server.entrypoints=websecure"
       - "traefik.http.routers.server.tls.certresolver=letsencrypt"
       - "traefik.http.services.server.loadbalancer.server.port=3001"
