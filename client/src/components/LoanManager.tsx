@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { config } from '../config';
 import { BookPlus, BookCheck } from 'lucide-react';
 import { Card, Button, Select } from './ui';
+import { useAuth } from './AuthContext';
 
 interface Book {
   id: number;
@@ -30,6 +31,7 @@ interface LoanManagerProps {
 
 
 const LoanManager = ({ books, members, onLoanChange, setNotification }: LoanManagerProps) => {
+  const { token } = useAuth();
   const [selectedBookToBorrow, setSelectedBookToBorrow] = useState<number | ''>('');
   const [selectedMember, setSelectedMember] = useState<number | ''>('');
   const [selectedBookToReturn, setSelectedBookToReturn] = useState<number | ''>('');
@@ -46,7 +48,10 @@ const LoanManager = ({ books, members, onLoanChange, setNotification }: LoanMana
     try {
       const response = await fetch(`${config.apiUrl}/loans/borrow`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
         body: JSON.stringify({ book_id: selectedBookToBorrow, member_id: selectedMember }),
       });
 
@@ -73,7 +78,10 @@ const LoanManager = ({ books, members, onLoanChange, setNotification }: LoanMana
     try {
       const response = await fetch(`${config.apiUrl}/loans/return`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
         body: JSON.stringify({ book_id: selectedBookToReturn }),
       });
 
