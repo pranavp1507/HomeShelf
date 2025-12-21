@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { Card } from './ui';
 import { BookOpen, Users, FileText, AlertCircle } from 'lucide-react';
 import { config } from '../config';
+import { apiFetch } from '../utils/api';
 
 interface DashboardStats {
   total_books: number;
@@ -63,7 +64,7 @@ const Dashboard = () => {
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch(`${config.apiUrl}/dashboard`, {
+        const response = await apiFetch(`${config.apiUrl}/dashboard`, {
           headers: {
             'Authorization': `Bearer ${token}`,
           },

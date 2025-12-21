@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { config } from '../config';
+import { apiFetch } from '../utils/api';
 import { Edit2, Trash2, Plus, Key, Users, UserPlus } from 'lucide-react';
 import { useAuth } from './AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -29,7 +30,7 @@ const UserManagement = () => {
   const fetchUsers = useCallback(async () => {
     setError(null);
     try {
-      const response = await fetch(`${config.apiUrl}/users`, {
+      const response = await apiFetch(`${config.apiUrl}/users`, {
         headers: { 'Authorization': `Bearer ${token}` },
       });
       if (!response.ok) {
@@ -77,7 +78,7 @@ const UserManagement = () => {
     if (!passwordChangeUserId || !newPassword) return;
 
     try {
-      const response = await fetch(`${config.apiUrl}/users/${passwordChangeUserId}/password`, {
+      const response = await apiFetch(`${config.apiUrl}/users/${passwordChangeUserId}/password`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -115,7 +116,7 @@ const UserManagement = () => {
     const method = isEditing ? 'PUT' : 'POST';
 
     try {
-      const response = await fetch(url, {
+      const response = await apiFetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
@@ -139,7 +140,7 @@ const UserManagement = () => {
     setError(null);
     if (window.confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
       try {
-        const response = await fetch(`${config.apiUrl}/users/${userId}`, {
+        const response = await apiFetch(`${config.apiUrl}/users/${userId}`, {
           method: 'DELETE',
           headers: { 'Authorization': `Bearer ${token}` },
         });

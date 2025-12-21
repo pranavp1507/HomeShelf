@@ -3,6 +3,7 @@ import { config } from '../config';
 import { BookPlus, BookCheck } from 'lucide-react';
 import { Card, Button, Select } from './ui';
 import { useAuth } from './AuthContext';
+import { apiFetch } from '../utils/api';
 
 interface Book {
   id: number;
@@ -46,7 +47,7 @@ const LoanManager = ({ books, members, onLoanChange, setNotification }: LoanMana
     }
 
     try {
-      const response = await fetch(`${config.apiUrl}/loans/borrow`, {
+      const response = await apiFetch(`${config.apiUrl}/loans/borrow`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -76,7 +77,7 @@ const LoanManager = ({ books, members, onLoanChange, setNotification }: LoanMana
     }
 
     try {
-      const response = await fetch(`${config.apiUrl}/loans/return`, {
+      const response = await apiFetch(`${config.apiUrl}/loans/return`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

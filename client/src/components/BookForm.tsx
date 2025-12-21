@@ -3,6 +3,7 @@ import { config } from '../config';
 import { Upload, Search, X, Image as ImageIcon } from 'lucide-react';
 import { useAuth } from './AuthContext';
 import { Modal, Button, Input, MultiSelect, type MultiSelectOption } from './ui';
+import { apiFetch } from '../utils/api';
 
 interface Category {
   id: number;
@@ -59,7 +60,7 @@ const BookForm = ({ open, onClose, onSubmit, bookToEdit }: BookFormProps) => {
 
     setLookupLoading(true);
     try {
-      const response = await fetch(`${config.apiUrl}/books/lookup`, {
+      const response = await apiFetch(`${config.apiUrl}/books/lookup`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -87,7 +88,7 @@ const BookForm = ({ open, onClose, onSubmit, bookToEdit }: BookFormProps) => {
 
   const fetchAllCategories = async () => {
     try {
-      const response = await fetch(`${config.apiUrl}/categories`);
+      const response = await apiFetch(`${config.apiUrl}/categories`);
       if (!response.ok) {
         throw new Error('Failed to fetch categories');
       }
@@ -137,7 +138,7 @@ const BookForm = ({ open, onClose, onSubmit, bookToEdit }: BookFormProps) => {
           const formData = new FormData();
           formData.append('cover', coverFile);
 
-          const response = await fetch(`${config.apiUrl}/books/${submittedBook.id}/cover`, {
+          const response = await apiFetch(`${config.apiUrl}/books/${submittedBook.id}/cover`, {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${token}`,
@@ -156,7 +157,7 @@ const BookForm = ({ open, onClose, onSubmit, bookToEdit }: BookFormProps) => {
             setCoverPreview(`${config.apiUrl.replace('/api', '')}${updatedBook.cover_image_path}`);
           }
         } else if (book.cover_image_path === undefined && bookToEdit?.cover_image_path) {
-          const response = await fetch(`${config.apiUrl}/books/${submittedBook.id}`, {
+          const response = await apiFetch(`${config.apiUrl}/books/${submittedBook.id}`, {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json',

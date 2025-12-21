@@ -9,6 +9,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { config } from "../config";
+import { apiFetch } from '../utils/api';
 
 interface SystemInfo {
   version: string;
@@ -33,7 +34,7 @@ const Settings = () => {
 
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`${config.apiUrl}/system/info`, {
+      const response = await apiFetch(`${config.apiUrl}/system/info`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

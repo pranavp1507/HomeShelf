@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { config } from '../config';
+import { apiFetch } from '../utils/api';
 import { Edit2, Trash2, Plus, FolderTree } from 'lucide-react';
 import { useAuth } from './AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -31,7 +32,7 @@ const CategoryManagement = () => {
   const fetchCategories = async () => {
     setError(null);
     try {
-      const response = await fetch(`${config.apiUrl}/categories`);
+      const response = await apiFetch(`${config.apiUrl}/categories`);
       if (!response.ok) {
         throw new Error('Failed to fetch categories');
       }
@@ -49,7 +50,7 @@ const CategoryManagement = () => {
       return;
     }
     try {
-      const response = await fetch(`${config.apiUrl}/categories`, {
+      const response = await apiFetch(`${config.apiUrl}/categories`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -85,7 +86,7 @@ const CategoryManagement = () => {
       return;
     }
     try {
-      const response = await fetch(`${config.apiUrl}/categories/${editCategory.id}`, {
+      const response = await apiFetch(`${config.apiUrl}/categories/${editCategory.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -108,7 +109,7 @@ const CategoryManagement = () => {
     setError(null);
     if (window.confirm('Are you sure you want to delete this category?')) {
       try {
-        const response = await fetch(`${config.apiUrl}/categories/${id}`, {
+        const response = await apiFetch(`${config.apiUrl}/categories/${id}`, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${token}`,

@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Button, Input, Card, Select } from './ui';
 import { Download, FileDown, Calendar } from 'lucide-react';
 import { config } from '../config';
+import { apiFetch } from '../utils/api';
 
 const DataExport = () => {
   const [exportType, setExportType] = useState<'books' | 'members' | 'loans'>('books');
@@ -34,7 +35,7 @@ const DataExport = () => {
 
       url += params.toString();
 
-      const response = await fetch(url, {
+      const response = await apiFetch(url, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,

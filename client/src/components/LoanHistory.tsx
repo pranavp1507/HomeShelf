@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { config } from '../config';
+import { apiFetch } from '../utils/api';
 import { motion } from 'framer-motion';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Search, FileText, Calendar, AlertCircle, BookOpen } from 'lucide-react';
@@ -42,7 +43,7 @@ const LoanHistory = () => {
         if (statusFilter !== 'all') url += `&status=${statusFilter}`;
         if (searchQuery) url += `&search=${searchQuery}`;
 
-        const response = await fetch(url);
+        const response = await apiFetch(url);
         if (!response.ok) {
           throw new Error('Failed to fetch loan history');
         }

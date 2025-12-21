@@ -29,6 +29,7 @@ import { useOnboarding } from './components/OnboardingContext';
 import { config } from './config';
 import { Input, Button, Select, MultiSelect } from './components/ui';
 import { Plus, Upload, Loader2 } from 'lucide-react';
+import { apiFetch } from './utils/api';
 import './App.css';
 
 // Define the book type
@@ -178,7 +179,7 @@ function App() {
     // Only fetch if setup is complete and user is authenticated
     if (!token || isSetupNeeded === true) return;
     try {
-      const response = await fetch(`${config.apiUrl}/categories`);
+      const response = await apiFetch(`${config.apiUrl}/categories`);
       if (!response.ok) throw new Error('Failed to fetch categories');
       const data = await response.json();
       setAllCategories(data);
@@ -197,7 +198,7 @@ function App() {
       if (availableStatusFilter !== 'all') url += `&availableStatus=${availableStatusFilter}`;
       if (categoryFilter.length > 0) url += `&categoryIds=${categoryFilter.map(cat => cat.id).join(',')}`;
 
-      const response = await fetch(url, {
+      const response = await apiFetch(url, {
         headers: { 'Authorization': `Bearer ${token}` },
       });
       if (!response.ok) throw new Error('Failed to fetch books');
@@ -224,7 +225,7 @@ function App() {
       let url = `${config.apiUrl}/members?sortBy=${memberSortBy}&sortOrder=${memberSortOrder}&page=${memberPage}&limit=${memberLimit}`;
       if (memberSearchQuery) url += `&search=${memberSearchQuery}`;
 
-      const response = await fetch(url, {
+      const response = await apiFetch(url, {
         headers: { 'Authorization': `Bearer ${token}` },
       });
       if (!response.ok) throw new Error('Failed to fetch members');
@@ -276,7 +277,7 @@ function App() {
     const url = bookData.id ? `${config.apiUrl}/books/${bookData.id}` : `${config.apiUrl}/books`;
 
     try {
-      const response = await fetch(url, {
+      const response = await apiFetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
@@ -309,7 +310,7 @@ function App() {
   const handleBookDelete = async (id: number) => {
     if (window.confirm('Are you sure you want to delete this book?')) {
       try {
-        const response = await fetch(`${config.apiUrl}/books/${id}`, {
+        const response = await apiFetch(`${config.apiUrl}/books/${id}`, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -343,7 +344,7 @@ function App() {
     const url = memberData.id ? `${config.apiUrl}/members/${memberData.id}` : `${config.apiUrl}/members`;
 
     try {
-      const response = await fetch(url, {
+      const response = await apiFetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
@@ -373,7 +374,7 @@ function App() {
   const handleMemberDelete = async (id: number) => {
     if (window.confirm('Are you sure you want to delete this member?')) {
       try {
-        const response = await fetch(`${config.apiUrl}/members/${id}`, {
+        const response = await apiFetch(`${config.apiUrl}/members/${id}`, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${token}`,

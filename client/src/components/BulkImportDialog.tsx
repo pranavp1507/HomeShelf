@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { config } from '../config';
+import { apiFetch } from '../utils/api';
 import { Download, Upload, FileText } from 'lucide-react';
 import { Modal, Button } from './ui';
 import { useAuth } from './AuthContext';
@@ -62,7 +63,7 @@ const BulkImportDialog = ({
     formData.append('file', selectedFile);
 
     try {
-      const response = await fetch(`${config.apiUrl}/books/bulk-import`, {
+      const response = await apiFetch(`${config.apiUrl}/books/bulk-import`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
