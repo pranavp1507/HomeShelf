@@ -9,6 +9,7 @@ export interface Book {
   isbn: string;
   available: boolean;
   cover_image_path?: string | null;
+  description?: string | null;
   created_at: Date;
 }
 
@@ -16,6 +17,7 @@ export interface BookInput {
   title: string;
   author: string;
   isbn: string;
+  description?: string;
   categoryIds?: number[];
 }
 

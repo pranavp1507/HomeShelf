@@ -1,7 +1,10 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { config } from '../config';
-import { Edit2, Trash2, ChevronUp, ChevronDown, BookOpen, Plus } from 'lucide-react';
-import { Badge, EmptyState } from './ui';
+import { Edit2, Trash2, ChevronUp, ChevronDown, BookOpen, Plus, Grid3x3, List } from 'lucide-react';
+import { Badge, EmptyState, BookCard } from './ui';
+import BookDetailModal from './BookDetailModal';
+import { useAuth } from './AuthContext';
 
 interface Category {
   id: number;
@@ -15,7 +18,9 @@ interface Book {
   isbn: string;
   available: boolean;
   cover_image_path?: string;
+  description?: string;
   categories?: Category[];
+  created_at?: string;
 }
 
 interface BookListProps {
@@ -60,9 +65,38 @@ const SortableHeader = ({ label, columnId, sortBy, sortOrder, onSort }: Sortable
 };
 
 const BookList = ({ books, onEdit, onDelete, onAdd, sortBy, sortOrder, onSortChange }: BookListProps) => {
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
+
+  // View mode state - default to grid view
+  const [viewMode, setViewMode] = useState<'table' | 'grid'>(() => {
+    const saved = localStorage.getItem('bookViewMode');
+    return (saved === 'table' || saved === 'grid') ? saved : 'grid';
+  });
+
+  // Selected book for detail modal
+  const [selectedBook, setSelectedBook] = useState<Book | null>(null);
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
+
   const handleSortRequest = (columnId: string) => {
     const isAsc = sortBy === columnId && sortOrder === 'asc';
     onSortChange(columnId, isAsc ? 'desc' : 'asc');
+  };
+
+  const toggleViewMode = () => {
+    const newMode = viewMode === 'table' ? 'grid' : 'table';
+    setViewMode(newMode);
+    localStorage.setItem('bookViewMode', newMode);
+  };
+
+  const handleBookClick = (book: Book) => {
+    setSelectedBook(book);
+    setDetailModalOpen(true);
+  };
+
+  const handleDetailModalClose = () => {
+    setDetailModalOpen(false);
+    setTimeout(() => setSelectedBook(null), 200); // Delay to allow modal animation to complete
   };
 
   if (books.length === 0) {
@@ -83,8 +117,47 @@ const BookList = ({ books, onEdit, onDelete, onAdd, sortBy, sortOrder, onSortCha
   }
 
   return (
-    <div className="bg-surface rounded-lg shadow-md overflow-hidden">
-      <div className="overflow-x-auto">
+    <>
+      {/* View Toggle Button */}
+      <div className="flex justify-end mb-4">
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={toggleViewMode}
+          className="flex items-center gap-2 px-4 py-2 bg-background-secondary border border-border rounded-lg hover:bg-background-tertiary transition-colors text-text-primary"
+        >
+          {viewMode === 'table' ? (
+            <>
+              <Grid3x3 className="h-5 w-5" />
+              <span>Grid View</span>
+            </>
+          ) : (
+            <>
+              <List className="h-5 w-5" />
+              <span>Table View</span>
+            </>
+          )}
+        </motion.button>
+      </div>
+
+      {/* Grid View */}
+      {viewMode === 'grid' ? (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+          {books.map((book, index) => (
+            <motion.div
+              key={book.id}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: index * 0.03, duration: 0.2 }}
+            >
+              <BookCard book={book} onClick={() => handleBookClick(book)} />
+            </motion.div>
+          ))}
+        </div>
+      ) : (
+        /* Table View */
+        <div className="bg-surface rounded-lg shadow-md overflow-hidden">
+          <div className="overflow-x-auto">
         <table className="w-full min-w-[650px]">
           <thead className="bg-background-secondary border-b border-border">
             <tr>
@@ -203,6 +276,18 @@ const BookList = ({ books, onEdit, onDelete, onAdd, sortBy, sortOrder, onSortCha
         </table>
       </div>
     </div>
+  )}
+
+      {/* Book Detail Modal */}
+      <BookDetailModal
+        book={selectedBook}
+        open={detailModalOpen}
+        onClose={handleDetailModalClose}
+        onEdit={selectedBook ? () => onEdit(selectedBook) : undefined}
+        onDelete={selectedBook ? () => onDelete(selectedBook.id) : undefined}
+        isAdmin={isAdmin}
+      />
+    </>
   );
 };
 

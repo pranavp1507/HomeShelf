@@ -45,7 +45,9 @@ interface Book {
   isbn: string;
   available: boolean;
   cover_image_path?: string;
+  description?: string;
   categories?: Category[];
+  created_at?: string;
 }
 
 // Define the member type

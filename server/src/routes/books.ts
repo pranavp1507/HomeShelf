@@ -122,6 +122,7 @@ router.post('/lookup', authUtils.authenticateToken, asyncHandler(async (req: Aut
     title: '',
     author: '',
     coverUrl: '',
+    description: '',
   };
 
   // 1. Try Open Library
@@ -161,6 +162,9 @@ router.post('/lookup', authUtils.authenticateToken, asyncHandler(async (req: Aut
         if (!bookData.coverUrl && gbData.volumeInfo.imageLinks) {
           bookData.coverUrl = gbData.volumeInfo.imageLinks.thumbnail || gbData.volumeInfo.imageLinks.smallThumbnail || '';
         }
+        if (!bookData.description && gbData.volumeInfo.description) {
+          bookData.description = gbData.volumeInfo.description;
+        }
       }
     } catch (gbErr: any) {
       console.error('Google Books lookup failed:', gbErr.message);
@@ -183,15 +187,15 @@ router.post('/lookup', authUtils.authenticateToken, asyncHandler(async (req: Aut
 
 // Create a new book
 router.post('/', authUtils.authenticateToken, validateBook, asyncHandler(async (req: AuthRequest, res: Response) => {
-  const { title, author, isbn, categoryIds } = req.body;
+  const { title, author, isbn, description, categoryIds } = req.body;
 
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
 
     const { rows } = await client.query<Book>(
-      'INSERT INTO books (title, author, isbn) VALUES ($1, $2, $3) RETURNING *',
-      [title, author, isbn || null]
+      'INSERT INTO books (title, author, isbn, description) VALUES ($1, $2, $3, $4) RETURNING *',
+      [title, author, isbn || null, description || null]
     );
     const newBook = rows[0];
 
@@ -217,7 +221,7 @@ router.post('/', authUtils.authenticateToken, validateBook, asyncHandler(async (
 // Update a book
 router.put('/:id', authUtils.authenticateToken, validateBook, asyncHandler(async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
-  const { title, author, isbn, available, cover_image_path, categoryIds } = req.body;
+  const { title, author, isbn, available, cover_image_path, description, categoryIds } = req.body;
 
   const client = await pool.connect();
   try {
@@ -234,8 +238,8 @@ router.put('/:id', authUtils.authenticateToken, validateBook, asyncHandler(async
     const oldCoverPath = oldBookRows[0].cover_image_path;
 
     const { rows } = await client.query<Book>(
-      'UPDATE books SET title = $1, author = $2, isbn = $3, available = $4, cover_image_path = $5 WHERE id = $6 RETURNING *',
-      [title, author, isbn || null, available !== undefined ? available : true, cover_image_path || null, id]
+      'UPDATE books SET title = $1, author = $2, isbn = $3, available = $4, cover_image_path = $5, description = $6 WHERE id = $7 RETURNING *',
+      [title, author, isbn || null, available !== undefined ? available : true, cover_image_path || null, description || null, id]
     );
 
     const updatedBook = rows[0];

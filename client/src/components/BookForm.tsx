@@ -17,6 +17,7 @@ interface Book {
   isbn: string;
   available?: boolean;
   cover_image_path?: string;
+  description?: string;
   categories?: Category[];
 }
 
@@ -29,7 +30,7 @@ interface BookFormProps {
 
 
 const BookForm = ({ open, onClose, onSubmit, bookToEdit }: BookFormProps) => {
-  const [book, setBook] = useState<Book>({ title: '', author: '', isbn: '' });
+  const [book, setBook] = useState<Book>({ title: '', author: '', isbn: '', description: '' });
   const [lookupIsbn, setLookupIsbn] = useState('');
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
@@ -46,7 +47,7 @@ const BookForm = ({ open, onClose, onSubmit, bookToEdit }: BookFormProps) => {
       setCoverPreview(bookToEdit.cover_image_path ? `${config.apiUrl.replace('/api', '')}${bookToEdit.cover_image_path}` : null);
       setSelectedCategories(bookToEdit.categories || []);
     } else {
-      setBook({ title: '', author: '', isbn: '' });
+      setBook({ title: '', author: '', isbn: '', description: '' });
       setLookupIsbn('');
       setCoverPreview(null);
       setSelectedCategories([]);
@@ -77,6 +78,7 @@ const BookForm = ({ open, onClose, onSubmit, bookToEdit }: BookFormProps) => {
         title: data.title || '',
         author: data.author || '',
         isbn: lookupIsbn,
+        description: data.description || '',
       }));
       setCoverPreview(data.coverUrl || null);
     } catch (error) {
@@ -99,7 +101,7 @@ const BookForm = ({ open, onClose, onSubmit, bookToEdit }: BookFormProps) => {
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setBook((prevBook) => ({ ...prevBook, [name]: value }));
   };
@@ -240,6 +242,25 @@ const BookForm = ({ open, onClose, onSubmit, bookToEdit }: BookFormProps) => {
           onChange={handleChange}
           fullWidth
         />
+
+        {/* Description */}
+        <div>
+          <label htmlFor="description" className="block text-sm font-medium text-text-primary mb-2">
+            Description / Synopsis
+          </label>
+          <textarea
+            id="description"
+            name="description"
+            value={book.description || ''}
+            onChange={handleChange}
+            rows={4}
+            className="w-full px-4 py-2 rounded-lg border border-border bg-background text-text-primary placeholder-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-y min-h-[100px]"
+            placeholder="Enter a brief description or synopsis of the book..."
+          />
+          <p className="mt-1 text-xs text-text-tertiary">
+            Optional. This description will be displayed in the book details view.
+          </p>
+        </div>
 
         {/* Categories */}
         <MultiSelect
