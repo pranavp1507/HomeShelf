@@ -81,17 +81,23 @@ const Login = () => {
         body: JSON.stringify({ username, password }),
       });
 
+      // Check if response is JSON before parsing
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new Error('Server returned an invalid response. Please try again later.');
+      }
+
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Login failed');
+        throw new Error(data.error || 'Invalid username or password');
       }
 
       const { token, user: userData } = data;
       login(token, userData);
       navigate('/');
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || 'An error occurred during login');
     } finally {
       setLoading(false);
     }

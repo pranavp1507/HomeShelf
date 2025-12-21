@@ -45,13 +45,13 @@ const Modal = ({ open, onClose, title, children, size = 'md' }: ModalProps) => {
           />
 
           {/* Modal */}
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none overflow-y-auto">
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               transition={{ duration: 0.2 }}
-              className={`w-full ${sizeClasses[size]} pointer-events-auto max-h-[90vh] flex flex-col`}
+              className={`w-full ${sizeClasses[size]} pointer-events-auto my-8`}
             >
               <Card variant="elevated" padding="none" className="overflow-hidden">
                 {/* Header */}
@@ -67,7 +67,7 @@ const Modal = ({ open, onClose, title, children, size = 'md' }: ModalProps) => {
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 overflow-y-auto p-6">
+                <div className="p-6">
                   {children}
                 </div>
               </Card>
