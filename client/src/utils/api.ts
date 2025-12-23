@@ -7,14 +7,14 @@ interface FetchOptions extends RequestInit {
 }
 
 /**
- * Custom fetch wrapper that automatically handles 401 errors
+ * Custom fetch wrapper that automatically handles 401/403 errors
  * and redirects to login when token expires
  */
 export async function apiFetch(url: string, options: FetchOptions = {}): Promise<Response> {
   const response = await fetch(url, options);
 
-  // Check for 401 Unauthorized - token expired or invalid
-  if (response.status === 401) {
+  // Check for 401 Unauthorized or 403 Forbidden - token expired or invalid
+  if (response.status === 401 || response.status === 403) {
     // Clear auth data
     localStorage.removeItem('token');
     localStorage.removeItem('user');
