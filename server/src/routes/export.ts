@@ -101,9 +101,12 @@ router.get('/books',
     const headers = ['id', 'title', 'author', 'isbn', 'available', 'cover_image_path', 'categories', 'created_at'];
     const csv = convertToCSV(rows, headers);
 
-    res.setHeader('Content-Type', 'text/csv');
+    // Add UTF-8 BOM for Excel compatibility with Unicode characters (Malayalam, etc.)
+    const csvWithBOM = '\uFEFF' + csv;
+
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', 'attachment; filename=books_export.csv');
-    res.send(csv);
+    res.send(csvWithBOM);
   })
 );
 
@@ -142,9 +145,12 @@ router.get('/members',
     const headers = ['id', 'name', 'email', 'phone', 'created_at'];
     const csv = convertToCSV(rows, headers);
 
-    res.setHeader('Content-Type', 'text/csv');
+    // Add UTF-8 BOM for Excel compatibility with Unicode characters (Malayalam, etc.)
+    const csvWithBOM = '\uFEFF' + csv;
+
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', 'attachment; filename=members_export.csv');
-    res.send(csv);
+    res.send(csvWithBOM);
   })
 );
 
@@ -217,9 +223,12 @@ router.get('/loans',
     const headers = ['id', 'book_title', 'book_author', 'book_isbn', 'member_name', 'member_email', 'borrow_date', 'due_date', 'return_date', 'status'];
     const csv = convertToCSV(rows, headers);
 
-    res.setHeader('Content-Type', 'text/csv');
+    // Add UTF-8 BOM for Excel compatibility with Unicode characters (Malayalam, etc.)
+    const csvWithBOM = '\uFEFF' + csv;
+
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', 'attachment; filename=loans_export.csv');
-    res.send(csv);
+    res.send(csvWithBOM);
   })
 );
 

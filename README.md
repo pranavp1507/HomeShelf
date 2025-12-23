@@ -15,14 +15,19 @@ A modern, full-stack library management system built with **React**, **TypeScrip
 ### 📚 Core Library Management
 
 - **Book Management**: Add, edit, search books with ISBN lookup (Google Books/Open Library API)
+- **Netflix-Style Grid View**: Visual book browsing with cover images, hover animations, and detailed modals
+- **Book Descriptions**: Add synopsis/descriptions to books (auto-populated from ISBN lookup)
+- **Bulk Operations** (Admin): Multi-select books for bulk delete, update availability, or manage categories
 - **Member Management**: Track library members with contact information
 - **Loan System**: Automated 14-day loan periods with overdue tracking
 - **Categories**: Organize books with multi-category support
 - **Cover Images**: Upload and display book covers
+- **🌐 Unicode/Multilingual**: Full support for Malayalam, Hindi, Tamil, and other languages in CSV import/export
 
 ### 🔐 Security & Authentication
 
 - JWT-based authentication with role-based access (Admin/Member)
+- **Proactive Token Validation**: Automatic expiration checking on page load and every 60 seconds
 - Bcrypt password hashing with timing-attack protection
 - Rate limiting (5 req/15min for auth, 100 req/15min for API)
 - Helmet security headers with Content Security Policy
@@ -33,15 +38,19 @@ A modern, full-stack library management system built with **React**, **TypeScrip
 
 - **Dashboard**: Real-time statistics (books, members, active loans, overdue)
 - **User Management**: Create and manage admin/member accounts
-- **Data Export**: CSV exports with date filters
-- **Bulk Import**: CSV import for books and members
+- **Data Export**: CSV exports with date filters (UTF-8 with BOM for Excel/LibreOffice)
+- **Bulk Import**: CSV import for books and members (supports Unicode/Malayalam)
+- **Bulk Operations**: Multi-select books for bulk actions (delete, update, categorize)
+- **Floating Action Toolbar**: Quick access to bulk operations when items are selected
 - **System Info**: View configuration and database status
 
 ### 🎨 User Experience
 
 - **Responsive Design**: Mobile-first with Tailwind CSS v4
+- **Grid & Table Views**: Toggle between Netflix-style visual grid and detailed table view
+- **Book Detail Modal**: Click any book for detailed view with cover, description, and actions
 - **Dark/Light Theme**: User preference saved to localStorage
-- **Smooth Animations**: Framer Motion for delightful interactions
+- **Smooth Animations**: Framer Motion for delightful interactions (hover, transitions, loading)
 - **Accessibility**: ARIA labels, keyboard navigation, screen reader support
 - **Loading States**: Skeletons and loading indicators
 - **User Onboarding**: Feature tour for new users
@@ -141,6 +150,7 @@ Visit `http://localhost:3000\` and create your admin account!
 
 - **[Getting Started Guide](./docs/deployment_options.md)** - Detailed setup instructions
 - **[Customization Guide](./docs/customization_guide.md)** - Configure branding, features, and settings
+- **[Unicode/Multilingual CSV Guide](./docs/unicode_csv_support.md)** - Malayalam, Hindi, Tamil support with Excel/LibreOffice
 - **[API Documentation](./docs/app_plan.md)** - REST API endpoints reference
 - **[Testing Guide](./docs/testing_guide.md)** - Running and writing tests
 - **[Contributing Guide](./CONTRIBUTING.md)** - How to contribute to this project
