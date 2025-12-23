@@ -22,19 +22,31 @@ interface Book {
 interface BookCardProps {
   book: Book;
   onClick: () => void;
+  selectable?: boolean;
+  selected?: boolean;
+  onSelectChange?: (bookId: number, selected: boolean) => void;
 }
 
-const BookCard = ({ book, onClick }: BookCardProps) => {
+const BookCard = ({ book, onClick, selectable = false, selected = false, onSelectChange }: BookCardProps) => {
   const coverImageUrl = book.cover_image_path
     ? `${config.apiUrl.replace('/api', '')}${book.cover_image_path}`
     : null;
+
+  const handleCheckboxClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onSelectChange) {
+      onSelectChange(book.id, !selected);
+    }
+  };
 
   return (
     <motion.div
       whileHover={{ y: -4, scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
       onClick={onClick}
-      className="bg-background-secondary rounded-lg overflow-hidden cursor-pointer border border-border hover:border-primary hover:shadow-lg transition-all duration-200"
+      className={`bg-background-secondary rounded-lg overflow-hidden cursor-pointer border transition-all duration-200 ${
+        selected ? 'border-primary ring-2 ring-primary ring-opacity-50' : 'border-border hover:border-primary'
+      } hover:shadow-lg`}
     >
       {/* Cover Image */}
       <div className="relative aspect-[2/3] bg-background-tertiary flex items-center justify-center overflow-hidden">
@@ -46,6 +58,18 @@ const BookCard = ({ book, onClick }: BookCardProps) => {
           />
         ) : (
           <BookOpen className="h-20 w-20 text-text-tertiary" />
+        )}
+
+        {/* Selection Checkbox Overlay */}
+        {selectable && (
+          <div className="absolute top-2 left-2" onClick={handleCheckboxClick}>
+            <input
+              type="checkbox"
+              checked={selected}
+              onChange={() => {}} // Handled by onClick above
+              className="h-5 w-5 rounded border-2 border-white cursor-pointer accent-primary"
+            />
+          </div>
         )}
 
         {/* Availability Badge Overlay */}

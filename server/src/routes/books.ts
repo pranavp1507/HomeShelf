@@ -496,4 +496,164 @@ router.post('/:id/cover',
   })
 );
 
+// Bulk delete books
+router.post('/bulk-delete', authUtils.authenticateToken, authUtils.checkAdmin, asyncHandler(async (req: AuthRequest, res: Response) => {
+  const { bookIds } = req.body;
+
+  if (!Array.isArray(bookIds) || bookIds.length === 0) {
+    throw new AppError('Book IDs array is required', 400);
+  }
+
+  // Validate all IDs are numbers
+  if (!bookIds.every(id => typeof id === 'number')) {
+    throw new AppError('All book IDs must be numbers', 400);
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    // Get all books to check for cover images
+    const { rows: books } = await client.query<Book>(
+      'SELECT id, cover_image_path FROM books WHERE id = ANY($1)',
+      [bookIds]
+    );
+
+    // Delete books (categories will be cascade deleted)
+    const { rowCount } = await client.query(
+      'DELETE FROM books WHERE id = ANY($1)',
+      [bookIds]
+    );
+
+    // Delete cover image files
+    for (const book of books) {
+      if (book.cover_image_path) {
+        const filePath = path.join(uploadsDir, path.basename(book.cover_image_path));
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+          console.log(`Deleted cover image: ${filePath}`);
+        }
+      }
+    }
+
+    await client.query('COMMIT');
+    res.json({
+      message: `Successfully deleted ${rowCount} books`,
+      deletedCount: rowCount
+    });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
+}));
+
+// Bulk update availability
+router.post('/bulk-update-availability', authUtils.authenticateToken, authUtils.checkAdmin, asyncHandler(async (req: AuthRequest, res: Response) => {
+  const { bookIds, available } = req.body;
+
+  if (!Array.isArray(bookIds) || bookIds.length === 0) {
+    throw new AppError('Book IDs array is required', 400);
+  }
+
+  if (typeof available !== 'boolean') {
+    throw new AppError('Available must be a boolean value', 400);
+  }
+
+  // Validate all IDs are numbers
+  if (!bookIds.every(id => typeof id === 'number')) {
+    throw new AppError('All book IDs must be numbers', 400);
+  }
+
+  const { rowCount } = await query(
+    'UPDATE books SET available = $1 WHERE id = ANY($2)',
+    [available, bookIds]
+  );
+
+  res.json({
+    message: `Successfully updated ${rowCount} books`,
+    updatedCount: rowCount
+  });
+}));
+
+// Bulk add categories
+router.post('/bulk-add-categories', authUtils.authenticateToken, authUtils.checkAdmin, asyncHandler(async (req: AuthRequest, res: Response) => {
+  const { bookIds, categoryIds } = req.body;
+
+  if (!Array.isArray(bookIds) || bookIds.length === 0) {
+    throw new AppError('Book IDs array is required', 400);
+  }
+
+  if (!Array.isArray(categoryIds) || categoryIds.length === 0) {
+    throw new AppError('Category IDs array is required', 400);
+  }
+
+  // Validate all IDs are numbers
+  if (!bookIds.every(id => typeof id === 'number') || !categoryIds.every(id => typeof id === 'number')) {
+    throw new AppError('All IDs must be numbers', 400);
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    let addedCount = 0;
+    for (const bookId of bookIds) {
+      for (const categoryId of categoryIds) {
+        // Use ON CONFLICT to avoid duplicate entries
+        const result = await client.query(
+          `INSERT INTO book_categories (book_id, category_id)
+           VALUES ($1, $2)
+           ON CONFLICT (book_id, category_id) DO NOTHING
+           RETURNING *`,
+          [bookId, categoryId]
+        );
+        if (result.rowCount && result.rowCount > 0) {
+          addedCount++;
+        }
+      }
+    }
+
+    await client.query('COMMIT');
+    res.json({
+      message: `Successfully added ${addedCount} category associations`,
+      addedCount
+    });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
+}));
+
+// Bulk remove categories
+router.post('/bulk-remove-categories', authUtils.authenticateToken, authUtils.checkAdmin, asyncHandler(async (req: AuthRequest, res: Response) => {
+  const { bookIds, categoryIds } = req.body;
+
+  if (!Array.isArray(bookIds) || bookIds.length === 0) {
+    throw new AppError('Book IDs array is required', 400);
+  }
+
+  if (!Array.isArray(categoryIds) || categoryIds.length === 0) {
+    throw new AppError('Category IDs array is required', 400);
+  }
+
+  // Validate all IDs are numbers
+  if (!bookIds.every(id => typeof id === 'number') || !categoryIds.every(id => typeof id === 'number')) {
+    throw new AppError('All IDs must be numbers', 400);
+  }
+
+  const { rowCount } = await query(
+    'DELETE FROM book_categories WHERE book_id = ANY($1) AND category_id = ANY($2)',
+    [bookIds, categoryIds]
+  );
+
+  res.json({
+    message: `Successfully removed ${rowCount} category associations`,
+    removedCount: rowCount
+  });
+}));
+
 export default router;

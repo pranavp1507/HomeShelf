@@ -505,6 +505,9 @@ function App() {
                               setBookSortBy(newSortBy);
                               setBookSortOrder(newSortOrder);
                             }}
+                            allCategories={allCategories}
+                            onRefresh={fetchBooks}
+                            setNotification={setNotification}
                           />
                         )}
                         <Pagination

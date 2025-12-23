@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { config } from '../config';
-import { Edit2, Trash2, ChevronUp, ChevronDown, BookOpen, Plus, Grid3x3, List } from 'lucide-react';
+import { Edit2, Trash2, ChevronUp, ChevronDown, BookOpen, Plus, Grid3x3, List, CheckSquare, Square } from 'lucide-react';
 import { Badge, EmptyState, BookCard } from './ui';
 import BookDetailModal from './BookDetailModal';
+import BulkActionsToolbar from './BulkActionsToolbar';
 import { useAuth } from './AuthContext';
+import { apiFetch } from '../utils/api';
 
 interface Category {
   id: number;
@@ -31,6 +33,9 @@ interface BookListProps {
   sortBy: string;
   sortOrder: 'asc' | 'desc';
   onSortChange: (sortBy: string, sortOrder: 'asc' | 'desc') => void;
+  allCategories?: Category[];
+  onRefresh?: () => void;
+  setNotification?: (notification: { open: boolean; message: string; severity: 'success' | 'error' | 'info' | 'warning' }) => void;
 }
 
 
@@ -64,8 +69,8 @@ const SortableHeader = ({ label, columnId, sortBy, sortOrder, onSort }: Sortable
   );
 };
 
-const BookList = ({ books, onEdit, onDelete, onAdd, sortBy, sortOrder, onSortChange }: BookListProps) => {
-  const { user } = useAuth();
+const BookList = ({ books, onEdit, onDelete, onAdd, sortBy, sortOrder, onSortChange, allCategories = [], onRefresh, setNotification }: BookListProps) => {
+  const { user, token } = useAuth();
   const isAdmin = user?.role === 'admin';
 
   // View mode state - default to grid view
@@ -77,6 +82,10 @@ const BookList = ({ books, onEdit, onDelete, onAdd, sortBy, sortOrder, onSortCha
   // Selected book for detail modal
   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
+
+  // Bulk selection state
+  const [bulkSelectMode, setBulkSelectMode] = useState(false);
+  const [selectedBookIds, setSelectedBookIds] = useState<Set<number>>(new Set());
 
   const handleSortRequest = (columnId: string) => {
     const isAsc = sortBy === columnId && sortOrder === 'asc';
@@ -99,6 +108,159 @@ const BookList = ({ books, onEdit, onDelete, onAdd, sortBy, sortOrder, onSortCha
     setTimeout(() => setSelectedBook(null), 200); // Delay to allow modal animation to complete
   };
 
+  // Bulk selection handlers
+  const handleSelectAll = () => {
+    if (selectedBookIds.size === books.length) {
+      setSelectedBookIds(new Set());
+    } else {
+      setSelectedBookIds(new Set(books.map(b => b.id)));
+    }
+  };
+
+  const handleSelectBook = (bookId: number, selected: boolean) => {
+    const newSelected = new Set(selectedBookIds);
+    if (selected) {
+      newSelected.add(bookId);
+    } else {
+      newSelected.delete(bookId);
+    }
+    setSelectedBookIds(newSelected);
+  };
+
+  const clearBulkSelection = () => {
+    setSelectedBookIds(new Set());
+    setBulkSelectMode(false);
+  };
+
+  // Bulk operation handlers
+  const handleBulkDelete = async () => {
+    const bookIds = Array.from(selectedBookIds);
+    if (!window.confirm(`Are you sure you want to delete ${bookIds.length} book${bookIds.length > 1 ? 's' : ''}?`)) {
+      return;
+    }
+
+    try {
+      const response = await apiFetch(`${config.apiUrl}/books/bulk-delete`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ bookIds }),
+      });
+
+      if (!response.ok) throw new Error('Failed to delete books');
+
+      const result = await response.json();
+      setNotification?.({ open: true, message: result.message, severity: 'success' });
+      clearBulkSelection();
+      onRefresh?.();
+    } catch (error: any) {
+      setNotification?.({ open: true, message: error.message, severity: 'error' });
+    }
+  };
+
+  const handleBulkUpdateAvailability = async (available: boolean) => {
+    const bookIds = Array.from(selectedBookIds);
+
+    try {
+      const response = await apiFetch(`${config.apiUrl}/books/bulk-update-availability`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ bookIds, available }),
+      });
+
+      if (!response.ok) throw new Error('Failed to update books');
+
+      const result = await response.json();
+      setNotification?.({ open: true, message: result.message, severity: 'success' });
+      clearBulkSelection();
+      onRefresh?.();
+    } catch (error: any) {
+      setNotification?.({ open: true, message: error.message, severity: 'error' });
+    }
+  };
+
+  const handleBulkAddCategories = async (categoryIds: number[]) => {
+    const bookIds = Array.from(selectedBookIds);
+
+    try {
+      const response = await apiFetch(`${config.apiUrl}/books/bulk-add-categories`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ bookIds, categoryIds }),
+      });
+
+      if (!response.ok) throw new Error('Failed to add categories');
+
+      const result = await response.json();
+      setNotification?.({ open: true, message: result.message, severity: 'success' });
+      clearBulkSelection();
+      onRefresh?.();
+    } catch (error: any) {
+      setNotification?.({ open: true, message: error.message, severity: 'error' });
+    }
+  };
+
+  const handleBulkRemoveCategories = async (categoryIds: number[]) => {
+    const bookIds = Array.from(selectedBookIds);
+
+    try {
+      const response = await apiFetch(`${config.apiUrl}/books/bulk-remove-categories`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ bookIds, categoryIds }),
+      });
+
+      if (!response.ok) throw new Error('Failed to remove categories');
+
+      const result = await response.json();
+      setNotification?.({ open: true, message: result.message, severity: 'success' });
+      clearBulkSelection();
+      onRefresh?.();
+    } catch (error: any) {
+      setNotification?.({ open: true, message: error.message, severity: 'error' });
+    }
+  };
+
+  const handleBulkExport = async () => {
+    const bookIds = Array.from(selectedBookIds);
+
+    try {
+      const queryString = `bookIds=${bookIds.join(',')}`;
+      const response = await apiFetch(`${config.apiUrl}/export/books?${queryString}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) throw new Error('Failed to export books');
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `selected-books-${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      setNotification?.({ open: true, message: `Exported ${bookIds.length} books successfully`, severity: 'success' });
+    } catch (error: any) {
+      setNotification?.({ open: true, message: error.message, severity: 'error' });
+    }
+  };
+
   if (books.length === 0) {
     return (
       <div className="bg-surface rounded-lg shadow-md">
@@ -118,8 +280,25 @@ const BookList = ({ books, onEdit, onDelete, onAdd, sortBy, sortOrder, onSortCha
 
   return (
     <>
-      {/* View Toggle Button */}
-      <div className="flex justify-end mb-4">
+      {/* View Toggle and Bulk Select Buttons */}
+      <div className="flex justify-between mb-4">
+        <div>
+          {isAdmin && (
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setBulkSelectMode(!bulkSelectMode)}
+              className={`flex items-center gap-2 px-4 py-2 border rounded-lg transition-colors ${
+                bulkSelectMode
+                  ? 'bg-primary text-white border-primary'
+                  : 'bg-background-secondary border-border text-text-primary hover:bg-background-tertiary'
+              }`}
+            >
+              {bulkSelectMode ? <CheckSquare className="h-5 w-5" /> : <Square className="h-5 w-5" />}
+              <span>Bulk Select</span>
+            </motion.button>
+          )}
+        </div>
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
@@ -150,7 +329,13 @@ const BookList = ({ books, onEdit, onDelete, onAdd, sortBy, sortOrder, onSortCha
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: index * 0.03, duration: 0.2 }}
             >
-              <BookCard book={book} onClick={() => handleBookClick(book)} />
+              <BookCard
+                book={book}
+                onClick={() => !bulkSelectMode && handleBookClick(book)}
+                selectable={bulkSelectMode}
+                selected={selectedBookIds.has(book.id)}
+                onSelectChange={handleSelectBook}
+              />
             </motion.div>
           ))}
         </div>
@@ -161,6 +346,17 @@ const BookList = ({ books, onEdit, onDelete, onAdd, sortBy, sortOrder, onSortCha
         <table className="w-full min-w-[650px]">
           <thead className="bg-background-secondary border-b border-border">
             <tr>
+              {bulkSelectMode && isAdmin && (
+                <th className="px-4 py-3 text-center w-12">
+                  <input
+                    type="checkbox"
+                    checked={selectedBookIds.size === books.length && books.length > 0}
+                    onChange={handleSelectAll}
+                    className="h-5 w-5 rounded border-2 cursor-pointer accent-primary"
+                    title="Select All"
+                  />
+                </th>
+              )}
               <th className="px-4 py-3 text-left text-sm font-semibold text-text-primary">Cover</th>
               <th className="px-4 py-3 text-left text-sm">
                 <SortableHeader
@@ -209,8 +405,23 @@ const BookList = ({ books, onEdit, onDelete, onAdd, sortBy, sortOrder, onSortCha
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.05, duration: 0.2 }}
-                  className="hover:bg-background-secondary transition-colors"
+                  className={`transition-colors ${
+                    selectedBookIds.has(book.id)
+                      ? 'bg-primary/10 hover:bg-primary/20'
+                      : 'hover:bg-background-secondary'
+                  }`}
                 >
+                  {bulkSelectMode && isAdmin && (
+                    <td className="px-4 py-3 text-center">
+                      <input
+                        type="checkbox"
+                        checked={selectedBookIds.has(book.id)}
+                        onChange={(e) => handleSelectBook(book.id, e.target.checked)}
+                        className="h-5 w-5 rounded border-2 cursor-pointer accent-primary"
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    </td>
+                  )}
                   <td className="px-4 py-3">
                     {book.cover_image_path ? (
                       <img
@@ -287,6 +498,21 @@ const BookList = ({ books, onEdit, onDelete, onAdd, sortBy, sortOrder, onSortCha
         onDelete={selectedBook ? () => onDelete(selectedBook.id) : undefined}
         isAdmin={isAdmin}
       />
+
+      {/* Bulk Actions Toolbar */}
+      {bulkSelectMode && isAdmin && (
+        <BulkActionsToolbar
+          selectedCount={selectedBookIds.size}
+          onClearSelection={clearBulkSelection}
+          onDelete={handleBulkDelete}
+          onMarkAvailable={() => handleBulkUpdateAvailability(true)}
+          onMarkBorrowed={() => handleBulkUpdateAvailability(false)}
+          onAddCategories={handleBulkAddCategories}
+          onRemoveCategories={handleBulkRemoveCategories}
+          onExport={handleBulkExport}
+          allCategories={allCategories}
+        />
+      )}
     </>
   );
 };
