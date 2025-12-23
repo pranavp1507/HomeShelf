@@ -32,6 +32,9 @@ CLAUDE.md
 # General Docs
 filestructure.txt
 
+# Custom compose files
+compose.prod.new.yml
+
 # Planning and session documents (kept locally, not published)
 docs/app_plan.md
 docs/app_status.md
